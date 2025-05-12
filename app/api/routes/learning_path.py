@@ -10,7 +10,7 @@ from app.schemas.learning_path import (
 )
 from app.api.dependencies.auth import get_current_active_user
 
-router = APIRouter(prefix="/learning-paths", tags=["learning paths"])
+router = APIRouter(prefix="/api/learning-path", tags=["learning paths"])
 learning_path_service = LearningPathService()
 
 @router.get("/niches", response_model=List[Niche])
@@ -21,11 +21,11 @@ async def get_niches():
     return await learning_path_service.get_all_niches()
 
 @router.get("/questions", response_model=List[PathQuestion])
-async def get_questions(niche_id: int):
+async def get_questions(nicheId: int):
     """
     Get questions to customize a learning path for a specific niche
     """
-    return await learning_path_service.get_questions_for_niche(niche_id)
+    return await learning_path_service.get_questions_for_niche(nicheId)
 
 @router.post("/generate", response_model=LearningPath)
 async def generate_learning_path(
@@ -44,7 +44,7 @@ async def generate_learning_path(
         request.answers
     )
 
-@router.post("", response_model=LearningPath)
+@router.post("/save", response_model=LearningPath)
 async def save_learning_path(
     path: LearningPathCreate,
     current_user: User = Depends(get_current_active_user)
