@@ -51,15 +51,19 @@ class LearningPathService:
                 )
             niche_name = niche.name
         
-        # Generate learning path using AI service
-        path_data = await self.ai_service.generate_learning_path(niche_name, answers)
+        # Generate learning path using AI service - now sync call without await
+        path_data = self.ai_service.generate_learning_path(niche_name, answers)
+        
+        # Import datetime here to keep the imports at the top clean
+        from datetime import datetime
+        current_time = datetime.utcnow()
         
         # Return the generated path (not saved to database yet)
         return LearningPath(
             id="",  # Temporary ID
             userId="",  # Will be set when saved
-            createdAt=None,  # Will be set when saved
-            updatedAt=None,
+            createdAt=current_time,  # Use current UTC time instead of None
+            updatedAt=current_time,  # Use current UTC time instead of None
             **path_data.model_dump()
         )
     

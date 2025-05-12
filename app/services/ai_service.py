@@ -47,7 +47,7 @@ class AIService:
         # Use Llama 3 model for generating structured outputs
         self.model = "llama-3.3-70b-versatile"
     
-    async def generate_learning_path(
+    def generate_learning_path(
         self, 
         niche_name: str, 
         answers: Dict[str, str]
@@ -100,7 +100,8 @@ class AIService:
         
         # Generate the learning path with structured output
         try:
-            response = await self.client.chat.completions.create(
+            # Use the instance client directly now that we've removed async
+            response = self.client.chat.completions.create(
                 model=self.model,
                 response_model=LearningPathOutput,
                 messages=[

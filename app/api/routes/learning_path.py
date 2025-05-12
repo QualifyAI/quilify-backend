@@ -35,6 +35,9 @@ async def generate_learning_path(
     """
     Generate a learning path based on niche and user answers
     """
+    # Debug log to check user authentication
+    print(f"Generating learning path for user: {current_user.email}")
+    
     return await learning_path_service.generate_learning_path(
         request.nicheId,
         request.customNiche,
