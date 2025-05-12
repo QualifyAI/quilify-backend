@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@radix-ui/react-select": "^2.2.4",
+    "lucide-react": "^0.510.0"
+  }
+}
