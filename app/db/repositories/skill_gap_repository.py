@@ -16,8 +16,12 @@ class SkillGapRepository:
         """
         Create a new skill gap analysis
         """
-        # Set the user ID
-        analysis_data["userId"] = ObjectId(user_id)
+        # Set the user ID - store as string to match resume collection
+        print(f"Creating analysis for user: {user_id}")
+        analysis_data["userId"] = user_id
+        
+        # Add creation timestamp
+        analysis_data["createdAt"] = datetime.utcnow()
         
         # Create the document in the database
         analysis_in_db = SkillGapAnalysisInDB(**analysis_data)
@@ -38,11 +42,48 @@ class SkillGapRepository:
             return self._map_to_skill_gap_analysis(analysis)
         return None
     
+    async def find_by_user_id_flexible(self, user_id: str):
+        """
+        Utility method to find documents by user ID, trying different ID formats
+        """
+        results = []
+        
+        # Try as ObjectId first
+        try:
+            print(f"Trying to find analyses with userId as ObjectId: {user_id}")
+            cursor = self.collection.find({"userId": ObjectId(user_id)})
+            obj_id_results = await cursor.to_list(None)
+            if obj_id_results:
+                print(f"Found {len(obj_id_results)} analyses with ObjectId")
+                results.extend(obj_id_results)
+        except Exception as e:
+            print(f"ObjectId search failed: {e}")
+        
+        # Try as string
+        if not results:
+            try:
+                print(f"Trying to find analyses with userId as string: {user_id}")
+                cursor = self.collection.find({"userId": user_id})
+                string_results = await cursor.to_list(None)
+                if string_results:
+                    print(f"Found {len(string_results)} analyses with string ID")
+                    results.extend(string_results)
+            except Exception as e:
+                print(f"String ID search failed: {e}")
+        
+        return results
+    
     async def get_analyses_by_user_id(self, user_id: str) -> List[SkillGapAnalysis]:
         """
         Get all skill gap analyses for a user
         """
-        analyses = await self.collection.find({"userId": ObjectId(user_id)}).to_list(None)
+        print(f"Getting all analyses for user: {user_id}")
+        analyses = await self.find_by_user_id_flexible(user_id)
+        if not analyses:
+            print(f"No analyses found for user {user_id}")
+            return []
+        
+        print(f"Found {len(analyses)} analyses for user {user_id}")
         return [self._map_to_skill_gap_analysis(analysis) for analysis in analyses]
     
     async def update_analysis(self, analysis_id: str, update_data: Dict[str, Any]) -> Optional[SkillGapAnalysis]:

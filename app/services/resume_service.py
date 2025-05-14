@@ -22,7 +22,6 @@ class ResumeService:
         """
         # Extract text from the resume file
         resume_text = await parse_resume_file(file)
-        
         # Prepare data for saving
         resume_data = {
             "title": title,
@@ -30,9 +29,16 @@ class ResumeService:
             "file_name": file.filename,
             "is_primary": is_primary
         }
+
+      
         
         # Save to database
-        return await self.repository.create_resume(user_id, resume_data)
+        created =  await self.repository.create_resume(user_id, resume_data)
+        
+        resumes = await self.repository.get_resume_by_user_id(user_id)
+        print("resumes", resumes)
+
+        return created
     
     async def save_resume_text(
         self,
@@ -68,6 +74,7 @@ class ResumeService:
         """
         Get all resumes for a user
         """
+        
         return await self.repository.get_resume_by_user_id(user_id)
     
     async def get_primary_resume(self, user_id: str) -> Optional[Resume]:

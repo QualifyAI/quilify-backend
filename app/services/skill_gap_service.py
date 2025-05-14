@@ -31,17 +31,34 @@ class SkillGapService:
         """
         # Get resume text (multiple sources with priority: resume_id > resume_file > resume_text)
         if resume_id:
-            # Use a stored resume
-            resume = await self.resume_service.get_resume(resume_id)
-            
-            # Check if the resume belongs to the user
-            if resume.userId != user_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not authorized to use this resume"
-                )
+            try:
+                # Use a stored resume
+                print(f"Attempting to retrieve resume with ID: {resume_id} for user: {user_id}")
+                resume = await self.resume_service.get_resume(resume_id)
                 
-            resume_text = resume.content
+                # Check if the resume belongs to the user
+                print(f"Comparing resume userId: '{resume.userId}' with current user_id: '{user_id}'")
+                resume_user_id_str = str(resume.userId).strip()
+                user_id_str = str(user_id).strip()
+                print(f"Stripped values for comparison: resume_user_id='{resume_user_id_str}', user_id='{user_id_str}'")
+                
+                if resume_user_id_str != user_id_str:
+                    print(f"Authorization error: Resume {resume_id} belongs to user {resume.userId}, not {user_id}")
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Not authorized to use this resume"
+                    )
+                
+                print(f"Successfully retrieved resume: '{resume.title}' (ID: {resume_id})")
+                resume_text = resume.content
+            except Exception as e:
+                error_msg = f"Error retrieving resume: {str(e.__class__.__name__)}: {str(e)}"
+                print(error_msg)
+                print(f"User ID: {user_id}, Resume ID: {resume_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Resume with ID {resume_id} not found. Please refresh your resume list and try again."
+                )
         elif not resume_text and resume_file:
             # Parse the uploaded file
             resume_text = await parse_resume_file(resume_file)

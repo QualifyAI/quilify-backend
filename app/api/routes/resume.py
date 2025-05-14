@@ -7,7 +7,7 @@ from app.models.user import User
 from app.api.dependencies.auth import get_current_active_user
 from app.schemas.resume import ResumeCreate, ResumeUpdate, ResumeResponse, ResumeListResponse
 
-router = APIRouter(prefix="/api/resumes", tags=["resumes"])
+router = APIRouter(prefix="/resumes", tags=["resumes"])
 resume_service = ResumeService()
 
 
@@ -21,13 +21,14 @@ async def upload_resume(
     """
     Upload a new resume file and extract its text content.
     """
+    print("before resume upload")
     resume = await resume_service.upload_resume(
         user_id=str(current_user.id),
         title=title,
         file=resume_file,
         is_primary=is_primary
     )
-    
+    print("after resume upload")
     return ResumeResponse(
         id=resume.id,
         title=resume.title,

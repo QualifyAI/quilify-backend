@@ -41,7 +41,8 @@ class ResumeRepository:
         """
         Get a resume by ID
         """
-        resume = await self.collection.find_one({"_id": ObjectId(resume_id)})
+        print(f"Getting resume with ID: {resume_id}")
+        resume = await self.find_by_id_flexible(resume_id)
         if resume:
             return self._map_to_resume(resume)
         return None
@@ -116,4 +117,41 @@ class ResumeRepository:
             is_primary=resume_db.get("is_primary", False),
             created_at=resume_db["created_at"],
             updated_at=resume_db.get("updated_at")
-        ) 
+        )
+    
+    async def find_by_id_flexible(self, id_value: str):
+        """
+        Utility method to find a document by ID, trying different ID formats
+        """
+        # Try as string first since that's what's working in our database
+        try:
+            print(f"Trying to find with string ID: {id_value}")
+            result = await self.collection.find_one({"_id": id_value})
+            if result:
+                print(f"Found with string ID")
+                return result
+        except Exception as e:
+            print(f"String ID lookup failed: {e}")
+        
+        # Try as ObjectId
+        try:
+            print(f"Trying to find with ObjectId: {id_value}")
+            result = await self.collection.find_one({"_id": ObjectId(id_value)})
+            if result:
+                print(f"Found with ObjectId")
+                return result
+        except Exception as e:
+            print(f"ObjectId conversion failed: {e}")
+        
+        # Try the string ID with quotes
+        try:
+            print(f"Trying to find with quoted string ID: '{id_value}'")
+            result = await self.collection.find_one({"_id": f"{id_value}"})
+            if result:
+                print(f"Found with quoted string ID")
+                return result
+        except Exception as e:
+            print(f"Quoted string ID lookup failed: {e}")
+        
+        print(f"Document not found with any ID format: {id_value}")
+        return None 

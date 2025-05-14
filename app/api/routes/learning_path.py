@@ -10,7 +10,7 @@ from app.schemas.learning_path import (
 )
 from app.api.dependencies.auth import get_current_active_user
 
-router = APIRouter(prefix="/api/learning-path", tags=["learning paths"])
+router = APIRouter(prefix="/learning-path", tags=["learning paths"])
 learning_path_service = LearningPathService()
 
 @router.get("/niches", response_model=List[Niche])

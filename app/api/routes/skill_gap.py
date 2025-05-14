@@ -6,7 +6,7 @@ from app.models.skill_gap import SkillGapAnalysis, ProjectRecommendation, SkillG
 from app.models.user import User
 from app.api.dependencies.auth import get_current_active_user
 
-router = APIRouter(prefix="/api/skill-gap", tags=["skill gap analysis"])
+router = APIRouter(prefix="/skill-gap", tags=["skill gap analysis"])
 skill_gap_service = SkillGapService()
 
 @router.post("/analyze", response_model=SkillGapAnalysis)
