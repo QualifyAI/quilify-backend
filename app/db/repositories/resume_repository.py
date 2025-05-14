@@ -117,7 +117,7 @@ class ResumeRepository:
             is_primary=resume_db.get("is_primary", False),
             created_at=resume_db["created_at"],
             updated_at=resume_db.get("updated_at")
-        )
+        ) 
     
     async def find_by_id_flexible(self, id_value: str):
         """
