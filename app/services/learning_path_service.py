@@ -4,12 +4,15 @@ from fastapi import HTTPException, status
 from app.db.repositories.learning_path_repository import LearningPathRepository
 from app.models.learning_path import LearningPath, LearningPathInDB, Niche, PathQuestion
 from app.services.ai_service import AIService
+from app.services.learning_path_ai_service import LearningPathAIService
+from app.core.config import settings
 
 
 class LearningPathService:
     def __init__(self):
         self.repository = LearningPathRepository()
         self.ai_service = AIService()
+        self.learning_path_ai_service = LearningPathAIService()
     
     async def get_all_niches(self) -> List[Niche]:
         """
@@ -17,9 +20,10 @@ class LearningPathService:
         """
         return await self.repository.get_all_niches()
     
-    async def get_questions_for_niche(self, niche_id: int) -> List[PathQuestion]:
+    async def get_questions_for_niche(self, niche_id: int, use_ai: bool = True) -> List[PathQuestion]:
         """
         Get questions to customize a learning path for a specific niche
+        If use_ai is True, generate questions using AI, otherwise fetch from database
         """
         # Check if niche exists
         niche = await self.repository.get_niche_by_id(niche_id)
@@ -29,7 +33,19 @@ class LearningPathService:
                 detail=f"Niche with ID {niche_id} not found"
             )
         
-        return await self.repository.get_questions_for_niche(niche_id)
+        # Use AI to generate questions if enabled
+        if use_ai and settings.USE_AI_FOR_QUESTIONS:
+            try:
+                # Generate questions using AI
+                return await self.learning_path_ai_service.generate_questions_for_niche(niche.name)
+            except Exception as e:
+                # Log the error and fall back to database questions
+                print(f"Error generating questions with AI: {e}")
+                # Fall back to database questions
+                return await self.repository.get_questions_for_niche(niche_id)
+        else:
+            # Fetch questions from database
+            return await self.repository.get_questions_for_niche(niche_id)
     
     async def generate_learning_path(
         self, 

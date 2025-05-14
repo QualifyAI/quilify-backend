@@ -132,7 +132,6 @@ class SkillGapAIService:
                 response_model=SkillGapAnalysisOutput,
                 messages=messages,
                 temperature=0.2,  # Lower temperature for more focused, consistent results
-                max_tokens=8000  # Increased token limit for more comprehensive responses
             )
             return response
         except Exception as e:

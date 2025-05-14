@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # Groq AI settings
     GROQ_API_KEY: Optional[str] = os.getenv("GROQ_API_KEY")
     
+    # Feature flags
+    USE_AI_FOR_QUESTIONS: bool = os.getenv("USE_AI_FOR_QUESTIONS", "true").lower() == "true"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

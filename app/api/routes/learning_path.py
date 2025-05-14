@@ -21,11 +21,15 @@ async def get_niches():
     return await learning_path_service.get_all_niches()
 
 @router.get("/questions", response_model=List[PathQuestion])
-async def get_questions(nicheId: int):
+async def get_questions(nicheId: int, use_ai: bool = True):
     """
     Get questions to customize a learning path for a specific niche
+    
+    Parameters:
+    - nicheId: ID of the niche to get questions for
+    - use_ai: If true, generate questions using AI instead of database (default: true)
     """
-    return await learning_path_service.get_questions_for_niche(nicheId)
+    return await learning_path_service.get_questions_for_niche(nicheId, use_ai)
 
 @router.post("/generate", response_model=LearningPath)
 async def generate_learning_path(

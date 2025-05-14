@@ -58,7 +58,13 @@ class AIService:
         # Prepare user preferences from answers
         user_preferences = []
         for question, answer in answers.items():
-            user_preferences.append(f"- {question}: {answer}")
+            # Process custom answers
+            if answer.startswith('custom:'):
+                # Extract the custom text after 'custom:'
+                cleaned_answer = answer[7:]  # Skip 'custom:'
+                user_preferences.append(f"- {question}: {cleaned_answer} (custom response)")
+            else:
+                user_preferences.append(f"- {question}: {answer}")
         
         user_preferences_text = "\n".join(user_preferences)
         
@@ -109,7 +115,6 @@ class AIService:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.7,
-                max_tokens=4000,
             )
             
             return response
