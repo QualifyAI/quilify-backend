@@ -180,14 +180,32 @@ class ResumeAnalysisService(BaseAIService):
         Returns:
             ImprovedResumeOutput containing the optimized resume and changes summary
         """
-        # Create system prompt
+        # Create system prompt with emphasis on beautiful formatting
         system_prompt = """
-        You are an expert resume writer with 15+ years of experience crafting high-impact, ATS-optimized resumes
-        for professionals across various industries. You specialize in transforming ordinary resumes into powerful
-        marketing documents that effectively showcase a candidate's value proposition.
+        You are an elite resume designer with 20+ years of experience crafting visually stunning, ATS-optimized resumes 
+        for top executives and professionals. You've helped thousands of clients land jobs at Fortune 500 companies.
         
-        Your task is to completely rewrite and enhance a resume based on detailed analysis findings. Your improved
-        version should address all the issues identified and implement all suggested improvements.
+        Your task is to completely transform this resume into a masterpiece that combines:
+        1. Compelling, achievement-oriented content
+        2. Clean, modern design with perfect spacing and alignment
+        3. Strategic keyword placement for ATS optimization
+        4. Visual hierarchy that guides the reader's eye
+        5. Perfect balance of white space and content density
+        
+        The output should be in Markdown format, but you MUST use advanced Markdown formatting to create 
+        a resume that looks professionally designed:
+        
+        - Use headings (# ## ###) strategically for section titles and name
+        - Use horizontal rules (---) to create visual separation
+        - Use bold and italics to emphasize key information
+        - Use tables for clean alignment of dates and locations
+        - Use bullet points with proper indentation hierarchies
+        - Add subtle Unicode symbols (like → ● ○ ■ □) where appropriate
+        - Use line breaks strategically to create proper spacing
+        - Create visual distinction between sections
+        
+        Your goal is to make this the most impressive resume the candidate has ever had - one that not only passes ATS systems
+        but also wows hiring managers and recruiters with its professional look and compelling content.
         """
         
         # Extract key recommendations from the analysis
@@ -196,6 +214,7 @@ class ResumeAnalysisService(BaseAIService):
         impact_recommendations = analysis_result.impact.recommendations 
         ats_recommendations = analysis_result.ats.recommendations
         weaknesses = analysis_result.topWeaknesses
+        strengths = analysis_result.topStrengths
         
         # Create a consolidated list of improvements to make
         improvement_points = content_recommendations + format_recommendations + impact_recommendations + ats_recommendations + weaknesses
@@ -205,9 +224,9 @@ class ResumeAnalysisService(BaseAIService):
         for example in analysis_result.bulletPointExamples:
             bullet_point_examples += f"- Before: {example.before}\n  After: {example.after}\n"
         
-        # Create user prompt
+        # Create user prompt with detailed guidance on resume structure
         user_prompt = f"""
-        Please create an optimized version of this resume for a {job_title} position in the {industry} industry.
+        Transform this resume into a professional, visually appealing document for a {job_title} position in the {industry} industry.
         
         ## ORIGINAL RESUME:
         {resume_text}
@@ -216,31 +235,88 @@ class ResumeAnalysisService(BaseAIService):
         Key issues to address:
         {chr(10).join(f"- {point}" for point in improvement_points)}
         
+        Key strengths to highlight:
+        {chr(10).join(f"- {strength}" for strength in strengths)}
+        
         ## BULLET POINT IMPROVEMENTS:
         {bullet_point_examples}
         
         ## KEYWORD OPPORTUNITIES:
         Missing keywords to add: {', '.join(analysis_result.keywordAnalysis.missing)}
         
-        ## INSTRUCTIONS:
-        1. Create a completely improved version of the resume in Markdown format
-        2. Address ALL the issues identified in the analysis
-        3. Make it visually appealing with proper formatting
-        4. Include all sections (header with contact details, summary, experience, education, skills)
-        5. Ensure all contact information remains the same as the original resume
-        6. Enhance bullet points with metrics and accomplishments
-        7. Focus on ATS optimization while maintaining readability
-        8. Use strong action verbs and consistent tense
-        9. Keep personal pronouns out of the resume
-        10. Make the resume laser-focused for a {job_title} position
+        ## DESIGN REQUIREMENTS:
+        Create a clean, modern resume with the following sections:
         
-        The improved resume should maintain all factual information while significantly enhancing:
-        - Structure and organization
-        - Impact and accomplishment focus
-        - ATS compatibility
-        - Overall professionalism
+        1. HEADER
+           - Name (prominently displayed)
+           - Contact information (phone, email, LinkedIn, location)
+           - Optional: Professional title aligned with target job
         
-        Format the output in clean, well-structured Markdown that could be easily rendered into a professional document.
+        2. PROFESSIONAL SUMMARY
+           - Compelling 3-4 line summary highlighting key qualifications
+           - Include top keywords from the job title and industry
+           - Focus on unique value proposition and career highlights
+        
+        3. SKILLS SECTION
+           - Organized in categories (Technical, Professional, etc.)
+           - Prioritize keywords relevant to the job
+           - Include all matched keywords: {', '.join(analysis_result.keywordAnalysis.matched)}
+           - Add missing keywords: {', '.join(analysis_result.keywordAnalysis.missing)}
+        
+        4. PROFESSIONAL EXPERIENCE
+           - Company name, location, job title with clear formatting
+           - Dates formatted consistently (MM/YYYY or YYYY)
+           - Accomplishment-focused bullet points with metrics
+           - Start each bullet with strong action verbs
+           - Include 3-5 bullets per position, focused on achievements
+        
+        5. EDUCATION
+           - Degree, institution, graduation date
+           - Relevant coursework or achievements if applicable
+        
+        6. ADDITIONAL SECTIONS (if relevant)
+           - Certifications
+           - Projects
+           - Volunteer work
+           - Publications/Patents
+        
+        ## MARKDOWN FORMATTING GUIDELINES:
+        - Use level 1 heading (#) for name
+        - Use level 2 headings (##) for main sections
+        - Use level 3 headings (###) for company names or degrees
+        - Use **bold** for job titles and degrees
+        - Use *italics* for dates and locations
+        - Use horizontal rules (---) to separate major sections
+        - Use bullet points with consistent indentation
+        - Use columns for skills section (using HTML table syntax if needed)
+        - Ensure proper spacing between sections
+        - Use Unicode symbols (→, •, ◦, etc.) for visual enhancement
+        
+        ## CONTENT REQUIREMENTS:
+        - Transform all weak bullet points into achievement-focused statements
+        - Quantify achievements with metrics where possible (%, $, time saved)
+        - Use strong action verbs at the start of each bullet
+        - Eliminate first-person pronouns (I, me, my)
+        - Use present tense for current positions, past tense for previous roles
+        - Include relevant keywords naturally throughout
+        - Ensure all information from original resume is preserved with proper context
+        
+        ## RESPONSE REQUIREMENTS:
+        In addition to providing the optimized resume in markdown format, please include:
+        
+        1. changesSummary: List at least 5 major changes you made to improve the resume
+        
+        2. improvementScore: Estimate the percentage improvement (0-100) this resume represents compared to the original
+        
+        3. sectionImprovements: For each section (Summary, Experience, Skills, Education, etc.), list specific improvements made
+        
+        4. keywordsAdded: List all the keywords you added to the resume that weren't in the original
+        
+        5. formattingImprovements: List all formatting improvements made to enhance visual appeal and readability
+        
+        6. contentImprovements: List all content improvements made to strengthen impact and effectiveness
+        
+        Create the most impressive, professional-looking resume possible that would pass any ATS system and impress any hiring manager.
         """
         
         # Make request to Groq

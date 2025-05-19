@@ -58,3 +58,7 @@ class ImprovedResumeOutput(BaseModel):
     markdown: str = Field(..., description="Markdown formatted improved resume")
     changesSummary: List[str] = Field(..., description="Summary of changes made (at least 5)")
     improvementScore: int = Field(..., description="Estimated score improvement (0-100)")
+    sectionImprovements: Dict[str, List[str]] = Field(..., description="Specific improvements made to each section")
+    keywordsAdded: List[str] = Field(..., description="Keywords added to the resume")
+    formattingImprovements: List[str] = Field(..., description="Formatting improvements made to the resume")
+    contentImprovements: List[str] = Field(..., description="Content improvements made to the resume")
