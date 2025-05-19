@@ -178,7 +178,7 @@ class ResumeAnalysisService(BaseAIService):
             analysis_result: The analysis result from analyze_resume
             
         Returns:
-            ImprovedResumeOutput containing the optimized resume and changes summary
+            ImprovedResumeOutput containing the optimized resume markdown and summary of changes
         """
         # Create system prompt with emphasis on beautiful formatting
         system_prompt = """
@@ -204,8 +204,11 @@ class ResumeAnalysisService(BaseAIService):
         - Use line breaks strategically to create proper spacing
         - Create visual distinction between sections
         
-        Your goal is to make this the most impressive resume the candidate has ever had - one that not only passes ATS systems
-        but also wows hiring managers and recruiters with its professional look and compelling content.
+        IMPORTANT: Your response must ONLY include:
+        1. The complete, detailed markdown for the improved resume
+        2. A list of major changes made to improve the resume
+        
+        Do not include any other information or analysis in your response.
         """
         
         # Extract key recommendations from the analysis
@@ -243,6 +246,7 @@ class ResumeAnalysisService(BaseAIService):
         
         ## KEYWORD OPPORTUNITIES:
         Missing keywords to add: {', '.join(analysis_result.keywordAnalysis.missing)}
+        Existing keywords to emphasize: {', '.join(analysis_result.keywordAnalysis.matched)}
         
         ## DESIGN REQUIREMENTS:
         Create a clean, modern resume with the following sections:
@@ -260,8 +264,7 @@ class ResumeAnalysisService(BaseAIService):
         3. SKILLS SECTION
            - Organized in categories (Technical, Professional, etc.)
            - Prioritize keywords relevant to the job
-           - Include all matched keywords: {', '.join(analysis_result.keywordAnalysis.matched)}
-           - Add missing keywords: {', '.join(analysis_result.keywordAnalysis.missing)}
+           - Include all matched keywords and add missing keywords
         
         4. PROFESSIONAL EXPERIENCE
            - Company name, location, job title with clear formatting
@@ -301,20 +304,14 @@ class ResumeAnalysisService(BaseAIService):
         - Include relevant keywords naturally throughout
         - Ensure all information from original resume is preserved with proper context
         
-        ## RESPONSE REQUIREMENTS:
-        In addition to providing the optimized resume in markdown format, please include:
+        ## RESPONSE FORMAT:
+        Your response must ONLY include:
         
-        1. changesSummary: List at least 5 major changes you made to improve the resume
+        1. markdown: The complete, professionally formatted resume in markdown
         
-        2. improvementScore: Estimate the percentage improvement (0-100) this resume represents compared to the original
+        2. changesSummary: A list of 5-8 major changes you made to improve the resume
         
-        3. sectionImprovements: For each section (Summary, Experience, Skills, Education, etc.), list specific improvements made
-        
-        4. keywordsAdded: List all the keywords you added to the resume that weren't in the original
-        
-        5. formattingImprovements: List all formatting improvements made to enhance visual appeal and readability
-        
-        6. contentImprovements: List all content improvements made to strengthen impact and effectiveness
+        IMPORTANT: The resume markdown should be complete, detailed, and professional. Include ALL relevant information from the original resume.
         
         Create the most impressive, professional-looking resume possible that would pass any ATS system and impress any hiring manager.
         """
