@@ -5,8 +5,10 @@ from app.services import LearningPathService
 from app.models.learning_path import LearningPath, Niche, PathQuestion
 from app.models.user import User
 from app.schemas.learning_path import (
+    NicheResponse, 
     LearningPathRequest, 
     LearningPathCreate,
+    LearningPathOutput
 )
 from app.api.dependencies.auth import get_current_active_user
 
@@ -31,7 +33,7 @@ async def get_questions(nicheId: int, use_ai: bool = True):
     """
     return await learning_path_service.get_questions_for_niche(nicheId, use_ai)
 
-@router.post("/generate", response_model=LearningPath)
+@router.post("/generate", response_model=LearningPathOutput)
 async def generate_learning_path(
     request: LearningPathRequest,
     current_user: User = Depends(get_current_active_user)

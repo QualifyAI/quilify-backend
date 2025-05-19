@@ -3,6 +3,17 @@ from pydantic import BaseModel, Field
 
 from app.models.learning_resource import LearningResource
 from app.models.learning_path import Niche, PathQuestion, LearningModule, LearningPath
+from app.services.learning_path.models import LearningPathOutput
+
+
+class NicheResponse(BaseModel):
+    """
+    Response model for a niche
+    """
+    id: int
+    name: str
+    icon: str
+    description: str
 
 
 class LearningPathRequest(BaseModel):

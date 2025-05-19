@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from app.db.repositories.learning_path_repository import LearningPathRepository
 from app.models.learning_path import LearningPath, Niche, PathQuestion
 from .learning_path_ai_service import LearningPathAIService
+from .models import LearningPathOutput
 
 class LearningPathService:
     """Service for managing learning path operations"""
@@ -54,7 +55,7 @@ class LearningPathService:
         niche_id: int, 
         custom_niche: Optional[str],
         answers: Dict[str, str]
-    ) -> LearningPath:
+    ) -> LearningPathOutput:
         """
         Generate a learning path based on niche and user answers
         
@@ -64,7 +65,7 @@ class LearningPathService:
             answers: Dictionary of question IDs and selected answers
             
         Returns:
-            Generated LearningPath object
+            Generated LearningPathOutput object from AI service
         """
         # Get the niche name
         niche_name = custom_niche
@@ -87,21 +88,11 @@ class LearningPathService:
                 detail="Either niche_id or custom_niche must be provided"
             )
         
-        # Generate learning path using AI
-        learning_path_data = await self.ai_service.generate_learning_path(
+        # Generate learning path using AI and return it directly
+        return await self.ai_service.generate_learning_path(
             niche_name=niche_name,
             answers=answers
         )
-        
-        # Create a LearningPath object
-        return LearningPath.model_validate({
-            "title": learning_path_data.title,
-            "description": learning_path_data.description,
-            "estimatedTime": learning_path_data.estimatedTime,
-            "modules": learning_path_data.modules,
-            "nicheId": niche_id,
-            "customNiche": custom_niche if not niche_id or niche_id <= 0 else None
-        })
     
     async def save_learning_path(self, user_id: str, learning_path_data: Dict[str, Any]) -> LearningPath:
         """
