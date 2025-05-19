@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 
-from app.services.learning_path_service import LearningPathService
+from app.services import LearningPathService
 from app.models.learning_path import LearningPath, Niche, PathQuestion
 from app.models.user import User
 from app.schemas.learning_path import (
@@ -10,7 +10,7 @@ from app.schemas.learning_path import (
 )
 from app.api.dependencies.auth import get_current_active_user
 
-router = APIRouter(prefix="/learning-path", tags=["learning paths"])
+router = APIRouter(prefix="/learning-paths", tags=["learning-paths"])
 learning_path_service = LearningPathService()
 
 @router.get("/niches", response_model=List[Niche])

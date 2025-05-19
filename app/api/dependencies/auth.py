@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
 
 from app.core.config import settings
-from app.services.auth_service import AuthService
+from app.services import AuthService
 from app.models.user import User, UserInDB
 
 oauth2_scheme = OAuth2PasswordBearer(

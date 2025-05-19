@@ -1,28 +1,12 @@
-import os
-import instructor
-from typing import Dict, Optional
-from groq import Groq
 import requests
+from typing import Dict, Optional
 from bs4 import BeautifulSoup
 
-from app.core.config import settings
+from app.services.ai.base_ai_service import BaseAIService
 from app.schemas.skill_gap import SkillGapAnalysisOutput
 
-class SkillGapAIService:
-    def __init__(self):
-        # Defer initialization to when methods are actually called
-        self.groq_client = None
-        self.client = None
-        # Use LLama 3.3 70B for optimal performance
-        self.model = "llama-3.3-70b-versatile"
-    
-    def _ensure_client_initialized(self):
-        """Lazily initialize the Groq client only when needed"""
-        if not self.groq_client:
-            # Initialize Groq client
-            self.groq_client = Groq(api_key=settings.GROQ_API_KEY)
-            # Patch with instructor for structured outputs
-            self.client = instructor.from_groq(self.groq_client)
+class SkillGapAIService(BaseAIService):
+    """Service for AI-based skill gap analysis"""
     
     async def analyze_skill_gap(
         self, 
@@ -32,10 +16,15 @@ class SkillGapAIService:
     ) -> SkillGapAnalysisOutput:
         """
         Analyze the skill gap between a resume and job description
-        """
-        # Ensure client is initialized
-        self._ensure_client_initialized()
         
+        Args:
+            resume_text: Text content of the resume
+            job_description: Text content of the job description
+            job_posting_url: Optional URL of the job posting
+            
+        Returns:
+            SkillGapAnalysisOutput containing detailed analysis
+        """
         # Create the system prompt
         system_prompt = """
         You are a senior executive recruiter and career strategist with 15+ years of experience in technical recruiting, talent acquisition, and career development. Your specialization is in performing extremely detailed skill gap analyses for candidates.
@@ -121,26 +110,27 @@ class SkillGapAIService:
         """
         
         # Make request to Groq
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
+            result = await self._make_groq_request(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
                 response_model=SkillGapAnalysisOutput,
-                messages=messages,
-                temperature=0.2,  # Lower temperature for more focused, consistent results
+                temperature=0.2  # Lower temperature for more focused, consistent results
             )
-            return response
+            return result
         except Exception as e:
-            print(f"Error from Groq API: {e}")
-            raise
+            # Re-raise with more specific context
+            raise Exception(f"Skill gap analysis failed: {str(e)}")
     
     async def fetch_job_description(self, url: str) -> str:
         """
         Fetch job description from a URL
+        
+        Args:
+            url: URL of the job posting
+            
+        Returns:
+            The extracted job description text
         """
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -197,23 +187,43 @@ class SkillGapAIService:
             return job_description
             
         except Exception as e:
-            print(f"Error fetching job description: {e}")
-            return f"Error fetching job description: {str(e)}"
+            raise Exception(f"Error fetching job description: {str(e)}")
     
     def _clean_job_description(self, text: str) -> str:
         """
-        Clean job description text
+        Clean up job description text
+        
+        Args:
+            text: Raw job description text
+            
+        Returns:
+            Cleaned job description text
         """
         if not text:
             return ""
-        
+            
         # Remove excessive whitespace
-        text = " ".join(text.split())
+        text = ' '.join(text.split())
         
-        # Basic cleaning
-        text = text.replace("\t", " ").replace("\r", " ")
+        # Replace multiple newlines with a single newline
+        import re
+        text = re.sub(r'\n+', '\n', text)
         
-        # Remove any HTML tags that might remain
-        text = BeautifulSoup(text, "html.parser").get_text()
+        # Remove very common boilerplate text about the company
+        boilerplate_phrases = [
+            "Equal Opportunity Employer",
+            "We are an equal opportunity employer",
+            "We're an equal opportunity employer",
+            "diversity and inclusion",
+            "About the company",
+            "About us"
+        ]
         
-        return text 
+        for phrase in boilerplate_phrases:
+            if phrase.lower() in text.lower():
+                # Only remove if it appears near the end of the description
+                idx = text.lower().find(phrase.lower())
+                if idx > 0.7 * len(text):  # If in the last 30% of the text
+                    text = text[:idx]
+        
+        return text.strip() 

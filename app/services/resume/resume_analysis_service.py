@@ -1,9 +1,7 @@
-import os
-import instructor
 from typing import Dict, Optional, List, Any
-from groq import Groq
 from pydantic import BaseModel, Field
 
+from app.services.ai.base_ai_service import BaseAIService
 from app.core.config import settings
 
 # Define the structured output models
@@ -161,21 +159,8 @@ class ImprovedResumeOutput(BaseModel):
     improvementScore: int = Field(..., description="Estimated score improvement (0-100)")
 
 
-class ResumeAnalysisService:
-    def __init__(self):
-        # Defer initialization to when methods are actually called
-        self.groq_client = None
-        self.client = None
-        # Use LLama 3.3 70B for optimal performance
-        self.model = "llama-3.3-70b-versatile"
-    
-    def _ensure_client_initialized(self):
-        """Lazily initialize the Groq client only when needed"""
-        if not self.groq_client:
-            # Initialize Groq client
-            self.groq_client = Groq(api_key=settings.GROQ_API_KEY)
-            # Patch with instructor for structured outputs
-            self.client = instructor.from_groq(self.groq_client)
+class ResumeAnalysisService(BaseAIService):
+    """Service for analyzing and optimizing resumes"""
     
     async def analyze_resume(
         self, 
@@ -185,12 +170,17 @@ class ResumeAnalysisService:
     ) -> ResumeAnalysisOutput:
         """
         Analyze a resume for ATS compatibility, content quality, and overall effectiveness
-        """
-        # Ensure client is initialized
-        self._ensure_client_initialized()
         
+        Args:
+            resume_text: The text content of the resume to analyze
+            job_title: The target job title
+            industry: The target industry
+            
+        Returns:
+            ResumeAnalysisOutput containing detailed analysis
+        """
         # Create the system prompt
-        system_prompt = f"""
+        system_prompt = """
         You are an expert resume consultant with 15+ years of experience in technical recruiting, talent acquisition, and career development. 
         Your specialization is in performing extremely detailed resume analyses and providing professional improvements.
         
@@ -250,23 +240,17 @@ class ResumeAnalysisService:
         """
         
         # Make request to Groq
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
+            result = await self._make_groq_request(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
                 response_model=ResumeAnalysisOutput,
-                messages=messages,
-                temperature=0.3,  # Lower temperature for more focused, consistent results
+                temperature=0.3
             )
-            print("response", response)
-            return response
+            return result
         except Exception as e:
-            print(f"Error from Groq API: {e}")
-            raise
+            # Re-raise with more specific context
+            raise Exception(f"Resume analysis failed: {str(e)}")
     
     async def optimize_resume(
         self, 
@@ -277,10 +261,16 @@ class ResumeAnalysisService:
     ) -> ImprovedResumeOutput:
         """
         Generate an optimized version of the resume based on the analysis
-        """
-        # Ensure client is initialized
-        self._ensure_client_initialized()
         
+        Args:
+            resume_text: The text content of the resume to optimize
+            job_title: The target job title
+            industry: The target industry
+            analysis_result: The analysis result from analyze_resume
+            
+        Returns:
+            ImprovedResumeOutput containing the optimized resume and changes summary
+        """
         # Create system prompt
         system_prompt = """
         You are an expert resume writer with 15+ years of experience crafting high-impact, ATS-optimized resumes
@@ -340,20 +330,14 @@ class ResumeAnalysisService:
         """
         
         # Make request to Groq
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
+            result = await self._make_groq_request(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
                 response_model=ImprovedResumeOutput,
-                messages=messages,
-                temperature=0.4,  # Slightly higher temperature for creativity in writing
+                temperature=0.4
             )
-            print("response", response)
-            return response
+            return result
         except Exception as e:
-            print(f"Error from Groq API: {e}")
-            raise 
+            # Re-raise with more specific context
+            raise Exception(f"Resume optimization failed: {str(e)}") 

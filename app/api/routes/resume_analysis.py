@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile,
 from typing import Optional
 
 from app.models.user import User
-from app.services.resume_analysis_service import ResumeAnalysisService, ResumeAnalysisOutput, ImprovedResumeOutput
-from app.services.resume_service import ResumeService
+from app.services import ResumeAnalysisService, ResumeService, ResumeAnalysisOutput, ImprovedResumeOutput
 from app.api.dependencies.auth import get_current_active_user
-from app.utils.resume_parser import parse_resume_file
+from app.services.utils.file_service import FileService
 
 router = APIRouter(prefix="/resume", tags=["resume-analysis"])
 resume_analysis_service = ResumeAnalysisService()
 resume_service = ResumeService()
+file_service = FileService()
 
 @router.post("/analyze", response_model=ResumeAnalysisOutput)
 async def analyze_resume(
@@ -56,7 +56,9 @@ async def analyze_resume(
     elif resume_file:
         # Extract text from uploaded file
         try:
-            resume_text = await parse_resume_file(resume_file)
+            resume_text = await file_service.parse_resume_file(resume_file)
+        except HTTPException as e:
+            raise e
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -126,7 +128,9 @@ async def optimize_resume(
     elif resume_file:
         # Extract text from uploaded file
         try:
-            resume_text = await parse_resume_file(resume_file)
+            resume_text = await file_service.parse_resume_file(resume_file)
+        except HTTPException as e:
+            raise e
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

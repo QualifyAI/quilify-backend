@@ -10,12 +10,21 @@ from app.models.user import User, UserInDB
 from app.schemas.auth import TokenPayload
 
 class AuthService:
+    """Service for handling authentication operations"""
+    
     def __init__(self):
         self.user_repository = UserRepository()
     
     async def authenticate_user(self, email: str, password: str) -> Optional[UserInDB]:
         """
         Authenticate user with email and password
+        
+        Args:
+            email: User's email address
+            password: User's plain text password
+            
+        Returns:
+            UserInDB object if authentication succeeds, None otherwise
         """
         user = await self.user_repository.get_by_email(email)
         if not user:
@@ -27,6 +36,12 @@ class AuthService:
     async def create_token_for_user(self, user: UserInDB) -> Dict[str, str]:
         """
         Create access token for user
+        
+        Args:
+            user: The user to create a token for
+            
+        Returns:
+            Dictionary containing the access token and token type
         """
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
@@ -41,6 +56,12 @@ class AuthService:
     async def get_current_user(self, token: str) -> Optional[UserInDB]:
         """
         Validate token and return current user
+        
+        Args:
+            token: JWT token to validate
+            
+        Returns:
+            UserInDB object if token is valid, None otherwise
         """
         try:
             payload = jwt.decode(
@@ -63,6 +84,15 @@ class AuthService:
     async def register_user(self, user_data: Dict[str, Any]) -> UserInDB:
         """
         Register a new user
+        
+        Args:
+            user_data: Dictionary containing user registration data
+            
+        Returns:
+            Newly created UserInDB object
+            
+        Raises:
+            HTTPException: If email is already registered
         """
         # Check if user with email already exists
         existing_user = await self.user_repository.get_by_email(user_data["email"])
@@ -77,7 +107,13 @@ class AuthService:
     
     def user_to_response(self, user: UserInDB) -> User:
         """
-        Convert UserInDB to User model
+        Convert UserInDB to User model for API responses
+        
+        Args:
+            user: UserInDB object to convert
+            
+        Returns:
+            User object for API response
         """
         user_dict = {
             "id": str(user.id),

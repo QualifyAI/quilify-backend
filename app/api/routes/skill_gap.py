@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Body
 from typing import List, Optional, Dict
 
-from app.services.skill_gap_service import SkillGapService
+from app.services import SkillGapService
 from app.models.skill_gap import SkillGapAnalysis, ProjectRecommendation, SkillGapAnalysisRequest
 from app.models.user import User
 from app.api.dependencies.auth import get_current_active_user

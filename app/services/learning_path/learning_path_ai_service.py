@@ -1,10 +1,7 @@
-import os
-import instructor
 from typing import Dict, List, Optional
-from groq import Groq
 from pydantic import BaseModel, Field
 
-from app.core.config import settings
+from app.services.ai.base_ai_service import BaseAIService
 from app.models.learning_path import PathQuestion
 
 class QuestionOption(BaseModel):
@@ -24,8 +21,6 @@ class NicheQuestionsOutput(BaseModel):
         description="List of multiple choice questions customized for the niche"
     )
 
-
-
 class LearningResourceOutput(BaseModel):
     """Output model for a learning resource"""
     type: str = Field(description="Type of resource (e.g., course, book, article, video, tutorial)")
@@ -33,7 +28,6 @@ class LearningResourceOutput(BaseModel):
     link: str = Field(description="URL link to the resource")
     rating: Optional[float] = Field(None, description="Rating of the resource (0-5)")
     description: Optional[str] = Field(None, description="Brief description of the resource")
-
 
 class LearningModuleOutput(BaseModel):
     """Output model for a learning module"""
@@ -46,7 +40,6 @@ class LearningModuleOutput(BaseModel):
     resources: List[LearningResourceOutput] = Field(description="List of learning resources for this module")
     tips: str = Field(description="Tips or advice for learning this module effectively")
 
-
 class LearningPathOutput(BaseModel):
     """Output model for a complete learning path"""
     title: str = Field(description="Title of the learning path")
@@ -55,33 +48,20 @@ class LearningPathOutput(BaseModel):
     modules: List[LearningModuleOutput] = Field(description="List of learning modules in this path")
     niche: str = Field(description="The industry niche or technology area for this path")
 
-
-
-
-class LearningPathAIService:
-    def __init__(self):
-        # Defer initialization to when methods are actually called
-        self.groq_client = None
-        self.client = None
-        # Use LLama 3.3 70B for optimal performance
-        self.model = "llama-3.3-70b-versatile"
-    
-    def _ensure_client_initialized(self):
-        """Lazily initialize the Groq client only when needed"""
-        if not self.groq_client:
-            # Initialize Groq client
-            self.groq_client = Groq(api_key=settings.GROQ_API_KEY)
-            # Patch with instructor for structured outputs
-            self.client = instructor.from_groq(self.groq_client)
+class LearningPathAIService(BaseAIService):
+    """Service for generating AI-based learning paths and related questions"""
     
     async def generate_questions_for_niche(self, niche_name: str) -> List[PathQuestion]:
         """
         Generate multiple choice questions for tailoring a learning path 
         based on the selected niche
-        """
-        # Ensure client is initialized
-        self._ensure_client_initialized()
         
+        Args:
+            niche_name: The name of the niche/industry
+            
+        Returns:
+            List of PathQuestion objects with generated questions
+        """
         # Create the system prompt
         system_prompt = """
         You are an expert education curriculum designer with deep expertise in personalized learning paths. 
@@ -124,18 +104,12 @@ class LearningPathAIService:
         """
         
         # Make request to Groq
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-        
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
+            response = await self._make_groq_request(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
                 response_model=NicheQuestionsOutput,
-                messages=messages,
-                temperature=0.3,  # Low temperature for consistent, focused results
-       
+                temperature=0.3
             )
             
             # Convert to PathQuestion model
@@ -147,12 +121,20 @@ class LearningPathAIService:
                 ) for q in response.questions
             ]
         except Exception as e:
-            print(f"Error generating questions with Groq API: {e}")
-            # Return a fallback set of generic questions
+            # Fall back to generating standard questions
+            print(f"Error generating questions with Groq API: {str(e)}")
             return self._generate_fallback_questions(niche_name)
     
     def _generate_fallback_questions(self, niche_name: str) -> List[PathQuestion]:
-        """Generate fallback questions if API call fails"""
+        """
+        Generate fallback questions if API call fails
+        
+        Args:
+            niche_name: The name of the niche/industry
+            
+        Returns:
+            List of standard PathQuestion objects
+        """
         return [
             PathQuestion(
                 id="experience_level",
@@ -199,93 +181,91 @@ class LearningPathAIService:
                 ]
             ),
             PathQuestion(
-                id="application_focus",
-                label=f"How do you plan to apply your {niche_name} knowledge?",
+                id="expertise_focus",
+                label=f"Which aspect of {niche_name} are you most interested in?",
                 options=[
-                    "Building personal projects",
-                    "Applying to jobs in this field",
-                    "Solving specific problems at work",
-                    "Teaching or mentoring others",
-                    "Exploring innovative ideas"
+                    "Fundamental principles and theory",
+                    "Practical implementation and tools",
+                    "Advanced techniques and specialization",
+                    "Industry best practices and standards",
+                    "Innovation and emerging trends"
                 ]
             )
         ]
     
-    
-
-    def generate_learning_path(
+    async def generate_learning_path(
         self, 
         niche_name: str, 
         answers: Dict[str, str]
     ) -> LearningPathOutput:
         """
-        Generate a learning path using Groq AI with structured outputs
+        Generate a personalized learning path based on user's niche and question answers
+        
+        Args:
+            niche_name: The name of the niche/industry
+            answers: Dictionary mapping question IDs to selected answers
+            
+        Returns:
+            LearningPathOutput containing the personalized learning path
         """
-        # Prepare user preferences from answers
-        user_preferences = []
-        for question, answer in answers.items():
-            # Process custom answers
-            if answer.startswith('custom:'):
-                # Extract the custom text after 'custom:'
-                cleaned_answer = answer[7:]  # Skip 'custom:'
-                user_preferences.append(f"- {question}: {cleaned_answer} (custom response)")
-            else:
-                user_preferences.append(f"- {question}: {answer}")
-        
-        user_preferences_text = "\n".join(user_preferences)
-        
         # Create the system prompt
-        system_prompt = f"""
-        You are an expert education advisor specializing in creating personalized learning paths.
-        Your task is to create a comprehensive, detailed learning path for a student interested in {niche_name}.
+        system_prompt = """
+        You are an expert education curriculum designer with deep expertise in creating personalized learning paths.
+        Your task is to design a comprehensive, structured learning journey for a user based on their specific field
+        of interest and their answers to personalization questions.
         
-        The learning path should be structured with modules that build on each other logically. 
-        Each module should contain:
-        - A clear title
-        - An appropriate timeline (in weeks/months)
-        - A difficulty level
-        - A detailed description
-        - A comprehensive list of relevant topics
-        - High-quality learning resources (courses, books, videos, etc.)
-        - Practical tips for success
+        The learning path you create should:
+        1. Be tailored to the user's experience level, goals, and preferences
+        2. Follow a logical progression from foundational to advanced concepts
+        3. Include a diverse mix of high-quality learning resources (courses, books, tutorials, projects)
+        4. Provide realistic time estimates for each module
+        5. Include practical advice and tips for effective learning
+        6. Cover both theoretical knowledge and practical applications
         
-        Learning resources should be real, accessible online resources with accurate links.
-        Include a mix of free and paid resources, focusing on quality and relevance.
+        For each module in the learning path:
+        - Create a descriptive title
+        - Provide a clear explanation of what will be covered
+        - List the key topics included
+        - Include 3-5 specific, high-quality learning resources with links
+        - Assign a difficulty level (Beginner, Intermediate, Advanced)
+        - Estimate a realistic timeline for completion
+        - Add helpful tips for success in that module
         
-        The overall path should have a clear progression, from foundational to advanced topics,
-        and should be tailored to the user's specific preferences.
+        Ensure the entire path is coherent, with later modules building on earlier ones, and the full journey
+        addressing all critical aspects of the specified field.
         """
+        
+        # Format the answers as a readable string
+        formatted_answers = "\n".join([f"- {key}: {value}" for key, value in answers.items()])
         
         # Create the user prompt
         user_prompt = f"""
-        Please create a detailed learning path for {niche_name} based on my preferences:
+        Please create a personalized learning path for someone interested in the "{niche_name}" field.
         
-        {user_preferences_text}
+        ## USER PROFILE:
+        Based on their answers to personalization questions:
+        {formatted_answers}
         
-        The learning path should:
-        1. Be comprehensive and well-structured
-        2. Include real, accessible learning resources with links
-        3. Provide a clear progression from basics to advanced topics
-        4. Be realistic in terms of timeline and learning curve
-        5. Include practical tips for each module
+        Please design a comprehensive learning path that:
+        - Is tailored specifically to this user's experience level, goals, and preferences
+        - Provides a clear structure from fundamentals to advanced concepts
+        - Includes 4-7 well-defined modules that build on each other
+        - For each module, includes high-quality, specific learning resources (courses, tutorials, books, etc.)
+        - Provides realistic time estimates for completion
+        - Includes practical advice and tips throughout
+        
+        Format the response according to the required schema, with all necessary details for each module and resource.
         """
         
-        # Generate the learning path with structured output
+        # Make request to Groq
         try:
-            # Use the instance client directly now that we've removed async
-            response = self.client.chat.completions.create(
-                model=self.model,
+            response = await self._make_groq_request(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
                 response_model=LearningPathOutput,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.7,
+                temperature=0.4
             )
-            
             return response
         except Exception as e:
-            # Log error and raise
-            print(f"Error generating learning path: {str(e)}")
-            raise
- 
+            # Re-raise with more specific context
+            raise Exception(f"Learning path generation failed: {str(e)}") 
