@@ -51,7 +51,7 @@ class ResumeRepository:
         """
         Get all resumes for a user
         """
-        query = {"userId": ObjectId(user_id)}
+        query = {"userId": user_id}
         if primary_only:
             query["is_primary"] = True
         

@@ -3,7 +3,6 @@ from fastapi import HTTPException, status
 
 from app.db.repositories.learning_path_repository import LearningPathRepository
 from app.models.learning_path import LearningPath, LearningPathInDB, Niche, PathQuestion
-from app.services.ai_service import AIService
 from app.services.learning_path_ai_service import LearningPathAIService
 from app.core.config import settings
 
@@ -11,7 +10,6 @@ from app.core.config import settings
 class LearningPathService:
     def __init__(self):
         self.repository = LearningPathRepository()
-        self.ai_service = AIService()
         self.learning_path_ai_service = LearningPathAIService()
     
     async def get_all_niches(self) -> List[Niche]:
@@ -68,7 +66,7 @@ class LearningPathService:
             niche_name = niche.name
         
         # Generate learning path using AI service - now sync call without await
-        path_data = self.ai_service.generate_learning_path(niche_name, answers)
+        path_data = self.learning_path_ai_service.generate_learning_path(niche_name, answers)
         
         # Import datetime here to keep the imports at the top clean
         from datetime import datetime
