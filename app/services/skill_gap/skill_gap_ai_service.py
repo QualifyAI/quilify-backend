@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from bs4 import BeautifulSoup
 
 from app.services.ai.base_ai_service import BaseAIService
-from app.schemas.skill_gap import SkillGapAnalysisOutput
+from app.services.skill_gap.models import SkillGapAnalysisOutput
 
 class SkillGapAIService(BaseAIService):
     """Service for AI-based skill gap analysis"""

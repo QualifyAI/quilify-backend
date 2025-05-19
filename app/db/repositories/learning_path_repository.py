@@ -3,7 +3,7 @@ from datetime import datetime
 from bson import ObjectId
 
 from app.db.mongodb import MongoDB
-from app.models.learning_path import LearningPathInDB, Niche, PathQuestion
+from app.models.learning_path import LearningPathInDB, LearningPath, Niche, PathQuestion
 
 
 class LearningPathRepository:
@@ -23,7 +23,7 @@ class LearningPathRepository:
     def question_collection(self):
         return MongoDB.get_db()[self.question_collection_name]
     
-    async def get_path_by_id(self, id: str) -> Optional[LearningPathInDB]:
+    async def get_path_by_id(self, id: str) -> Optional[LearningPath]:
         """
         Get learning path by ID
         """
@@ -32,10 +32,10 @@ class LearningPathRepository:
             
         path = await self.path_collection.find_one({"_id": ObjectId(id)})
         if path:
-            return LearningPathInDB.model_validate(path)
+            return self._map_to_learning_path(path)
         return None
     
-    async def get_paths_by_user_id(self, user_id: str) -> List[LearningPathInDB]:
+    async def get_paths_by_user_id(self, user_id: str) -> List[LearningPath]:
         """
         Get all learning paths for a user
         """
@@ -44,9 +44,9 @@ class LearningPathRepository:
             
         cursor = self.path_collection.find({"userId": ObjectId(user_id)})
         paths = await cursor.to_list(length=100)
-        return [LearningPathInDB.model_validate(path) for path in paths]
+        return [self._map_to_learning_path(path) for path in paths]
     
-    async def create_path(self, user_id: str, path_data: Dict[str, Any]) -> LearningPathInDB:
+    async def create_path(self, user_id: str, path_data: Dict[str, Any]) -> LearningPath:
         """
         Create a new learning path
         """
@@ -58,9 +58,9 @@ class LearningPathRepository:
         # Get the created path
         created_path = await self.path_collection.find_one({"_id": result.inserted_id})
         
-        return LearningPathInDB.model_validate(created_path)
+        return self._map_to_learning_path(created_path)
     
-    async def update_path(self, id: str, update_data: Dict[str, Any]) -> Optional[LearningPathInDB]:
+    async def update_path(self, id: str, update_data: Dict[str, Any]) -> Optional[LearningPath]:
         """
         Update learning path
         """
@@ -72,7 +72,11 @@ class LearningPathRepository:
             {"_id": ObjectId(id)},
             {"$set": update_data}
         )
-        return await self.get_path_by_id(id)
+        
+        updated_path = await self.path_collection.find_one({"_id": ObjectId(id)})
+        if updated_path:
+            return self._map_to_learning_path(updated_path)
+        return None
     
     async def delete_path(self, id: str) -> bool:
         """
@@ -107,4 +111,22 @@ class LearningPathRepository:
         """
         cursor = self.question_collection.find({"nicheId": niche_id})
         questions = await cursor.to_list(length=50)
-        return [PathQuestion.model_validate(q) for q in questions] 
+        return [PathQuestion.model_validate(q) for q in questions]
+    
+    def _map_to_learning_path(self, path_db: Dict[str, Any]) -> LearningPath:
+        """
+        Map a database document to a LearningPath model
+        """
+        path_data = LearningPathInDB.model_validate(path_db)
+        
+        return LearningPath(
+            id=str(path_data.id),
+            userId=str(path_data.userId),
+            title=path_data.title,
+            description=path_data.description,
+            estimatedTime=path_data.estimatedTime,
+            modules=path_data.modules,
+            niche=path_data.niche,
+            createdAt=path_data.createdAt,
+            updatedAt=path_data.updatedAt
+        ) 

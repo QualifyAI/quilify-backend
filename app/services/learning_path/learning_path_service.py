@@ -115,7 +115,7 @@ class LearningPathService:
             Saved LearningPath object
         """
         learning_path_data["userId"] = user_id
-        return await self.repository.create_learning_path(learning_path_data)
+        return await self.repository.create_path(user_id, learning_path_data)
     
     async def get_user_learning_paths(self, user_id: str) -> List[LearningPath]:
         """
@@ -127,7 +127,7 @@ class LearningPathService:
         Returns:
             List of LearningPath objects
         """
-        return await self.repository.get_learning_paths_by_user_id(user_id)
+        return await self.repository.get_paths_by_user_id(user_id)
     
     async def get_learning_path(self, path_id: str) -> LearningPath:
         """
@@ -142,7 +142,7 @@ class LearningPathService:
         Raises:
             HTTPException: If learning path is not found
         """
-        learning_path = await self.repository.get_learning_path_by_id(path_id)
+        learning_path = await self.repository.get_path_by_id(path_id)
         
         if not learning_path:
             raise HTTPException(
@@ -166,7 +166,7 @@ class LearningPathService:
         Raises:
             HTTPException: If learning path is not found
         """
-        updated_path = await self.repository.update_learning_path(path_id, update_data)
+        updated_path = await self.repository.update_path(path_id, update_data)
         
         if not updated_path:
             raise HTTPException(
@@ -189,7 +189,7 @@ class LearningPathService:
         Raises:
             HTTPException: If learning path is not found
         """
-        path = await self.repository.get_learning_path_by_id(path_id)
+        path = await self.repository.get_path_by_id(path_id)
         
         if not path:
             raise HTTPException(
@@ -197,4 +197,4 @@ class LearningPathService:
                 detail=f"Learning path with ID {path_id} not found"
             )
             
-        return await self.repository.delete_learning_path(path_id) 
+        return await self.repository.delete_path(path_id) 
