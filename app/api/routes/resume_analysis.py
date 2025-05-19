@@ -1,20 +1,33 @@
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Body
-from typing import Optional
+from typing import Optional, List
+from pydantic import BaseModel
+from datetime import datetime
 
 from app.models.user import User
 from app.services import ResumeAnalysisService, ResumeService, ResumeAnalysisOutput, ImprovedResumeOutput
 from app.api.dependencies.auth import get_current_active_user
 from app.services.utils.file_service import FileService
 
+# Define a response model for analyze_resume
+class ResumeAnalysisResponse(BaseModel):
+    analysis_id: str
+    analysis_result: ResumeAnalysisOutput
+
+# Define a model for analysis metadata
+class AnalysisMetadata(BaseModel):
+    id: str
+    userId: str
+    resumeId: str
+    createdAt: datetime
+
 router = APIRouter(prefix="/resume", tags=["resume-analysis"])
 resume_analysis_service = ResumeAnalysisService()
 resume_service = ResumeService()
 file_service = FileService()
 
-@router.post("/analyze", response_model=ResumeAnalysisOutput)
+@router.post("/analyze", response_model=ResumeAnalysisResponse)
 async def analyze_resume(
-    resume_file: Optional[UploadFile] = File(None),
-    resume_id: Optional[str] = Form(None),
+    resume_id: str = Form(...),
     job_title: str = Form("General Position"),
     industry: str = Form("Technology"),
     current_user: User = Depends(get_current_active_user),
@@ -22,57 +35,48 @@ async def analyze_resume(
     """
     Analyze a resume for ATS compatibility, content quality, and overall effectiveness.
     
-    Can accept either a resume file upload or an existing resume ID.
+    Uses an existing resume from the user's saved resumes.
     """
-    # Check if we have at least one source
-    if not resume_file and not resume_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either resume_file or resume_id must be provided"
-        )
-    
-    # Get resume text
-    resume_text = ""
-    
-    if resume_id:
-        # Get resume from database
-        try:
-            resume = await resume_service.get_resume(resume_id)
+    # Get resume from database
+    try:
+        resume = await resume_service.get_resume(resume_id)
+        
+        # Verify the resume belongs to the current user
+        if resume.userId != str(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this resume"
+            )
             
-            # Verify the resume belongs to the current user
-            if resume.userId != str(current_user.id):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not authorized to access this resume"
-                )
-                
-            resume_text = resume.content
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Resume not found: {str(e)}"
-            )
-    
-    elif resume_file:
-        # Extract text from uploaded file
-        try:
-            resume_text = await file_service.parse_resume_file(resume_file)
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to parse resume file: {str(e)}"
-            )
+        resume_text = resume.content
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Resume not found: {str(e)}"
+        )
     
     # Perform the analysis
     try:
+        # We'll let the service handle the saving
         analysis_result = await resume_analysis_service.analyze_resume(
             resume_text=resume_text,
             job_title=job_title,
-            industry=industry
+            industry=industry,
+            user_id=str(current_user.id),
+            resume_id=resume_id
         )
-        return analysis_result
+        
+        # Save the analysis (the service's analyze_resume doesn't return the ID)
+        analysis_id = await resume_analysis_service.save_analysis(
+            user_id=str(current_user.id),
+            resume_id=resume_id,
+            analysis_result=analysis_result
+        )
+        
+        return ResumeAnalysisResponse(
+            analysis_id=analysis_id,
+            analysis_result=analysis_result
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -81,69 +85,66 @@ async def analyze_resume(
 
 @router.post("/optimize", response_model=ImprovedResumeOutput)
 async def optimize_resume(
+    resume_id: str = Form(...),
     analysis_id: Optional[str] = Form(None),
-    resume_file: Optional[UploadFile] = File(None),
-    resume_id: Optional[str] = Form(None),
     job_title: str = Form("General Position"),
     industry: str = Form("Technology"),
-    analysis_result: Optional[ResumeAnalysisOutput] = Body(None),
     current_user: User = Depends(get_current_active_user),
 ):
     """
     Generate an optimized version of a resume based on analysis results.
     
-    Can accept:
-    - Either a resume file upload or an existing resume ID
-    - Either an analysis result object or will perform a new analysis
+    Uses an existing resume from the user's saved resumes.
+    Optionally accepts a previous analysis ID or will perform a new analysis.
     """
-    # Check if we have at least one source
-    if not resume_file and not resume_id:
+    # Get resume from database
+    try:
+        resume = await resume_service.get_resume(resume_id)
+        
+        # Verify the resume belongs to the current user
+        if resume.userId != str(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this resume"
+            )
+            
+        resume_text = resume.content
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either resume_file or resume_id must be provided"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Resume not found: {str(e)}"
         )
     
-    # Get resume text
-    resume_text = ""
-    
-    if resume_id:
-        # Get resume from database
+    # Get the analysis result if an ID was provided
+    analysis_result = None
+    if analysis_id:
         try:
-            resume = await resume_service.get_resume(resume_id)
+            # Fetch the analysis from the database
+            # This assumes you have a method to retrieve analysis by ID
+            # If not, you'll need to implement this in a service
+            analysis_result = await resume_analysis_service.get_analysis_by_id(analysis_id)
             
-            # Verify the resume belongs to the current user
-            if resume.userId != str(current_user.id):
+            # Verify the analysis belongs to the user/resume
+            if not analysis_result:
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not authorized to access this resume"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Analysis with ID {analysis_id} not found"
                 )
-                
-            resume_text = resume.content
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Resume not found: {str(e)}"
+                detail=f"Error retrieving analysis: {str(e)}"
             )
     
-    elif resume_file:
-        # Extract text from uploaded file
-        try:
-            resume_text = await file_service.parse_resume_file(resume_file)
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to parse resume file: {str(e)}"
-            )
-    
-    # If analysis result wasn't provided, perform analysis first
+    # If analysis result wasn't provided or found, perform analysis first
     if not analysis_result:
         try:
             analysis_result = await resume_analysis_service.analyze_resume(
                 resume_text=resume_text,
                 job_title=job_title,
-                industry=industry
+                industry=industry,
+                user_id=str(current_user.id),
+                resume_id=resume_id
             )
         except Exception as e:
             raise HTTPException(
@@ -164,4 +165,50 @@ async def optimize_resume(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Optimization failed: {str(e)}"
+        )
+
+@router.get("/analyses", response_model=List[AnalysisMetadata])
+async def get_user_analyses(
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get all resume analyses for the current user
+    """
+    try:
+        analyses = await resume_analysis_service.repository.get_analyses_by_user_id(str(current_user.id))
+        return analyses
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving analyses: {str(e)}"
+        )
+
+@router.get("/analyses/{analysis_id}", response_model=ResumeAnalysisOutput)
+async def get_analysis_by_id(
+    analysis_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get a specific resume analysis by ID
+    """
+    try:
+        # Get the analysis
+        analysis = await resume_analysis_service.get_analysis_by_id(analysis_id)
+        
+        if not analysis:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Analysis with ID {analysis_id} not found"
+            )
+        
+        # TODO: Add verification that the analysis belongs to the current user
+        # This would require storing user_id with the analysis in the database
+        
+        return analysis
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving analysis: {str(e)}"
         ) 

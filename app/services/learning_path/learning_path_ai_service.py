@@ -219,7 +219,7 @@ class LearningPathAIService(BaseAIService):
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 response_model=LearningPathOutput,
-                temperature=0.2
+                temperature=0.1
             )
             return response
         except Exception as e:
