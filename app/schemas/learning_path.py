@@ -55,7 +55,11 @@ class LearningModuleCreate(BaseModel):
 
 class LearningPathCreate(BaseModel):
     """
-    Model for creating a learning path
+    Model for creating a learning path in the database.
+    
+    When saving a path from the /generate endpoint (LearningPathOutput),
+    you'll need to extract just these fields, as other fields like subtopics
+    and enhanced module properties won't be stored in the database.
     """
     title: str
     description: str

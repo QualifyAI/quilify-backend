@@ -33,13 +33,18 @@ async def get_questions(nicheId: int, use_ai: bool = True):
     """
     return await learning_path_service.get_questions_for_niche(nicheId, use_ai)
 
-@router.post("/generate", response_model=LearningPathOutput)
+@router.post("/generate", response_model=LearningPathOutput, response_model_exclude_none=True)
 async def generate_learning_path(
     request: LearningPathRequest,
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    Generate a learning path based on niche and user answers
+    Generate a personalized learning path based on niche and user answers.
+    
+    Returns a detailed learning path structure with enhanced modules, resources and subtopics.
+    This learning path is NOT yet saved to the database. Use the /save endpoint to persist it.
+    
+    Note: The response does not include database fields like id, userId, createdAt, or updatedAt.
     """
     # Debug log to check user authentication
     print(f"Generating learning path for user: {current_user.email}")
@@ -56,7 +61,13 @@ async def save_learning_path(
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    Save a learning path for a user
+    Save a learning path for a user.
+    
+    Use this endpoint to persist a learning path generated from the /generate endpoint.
+    The saved path will include database fields like id, userId, createdAt, and updatedAt.
+    
+    Note: This endpoint returns a LearningPath model, which has a different structure than
+    the LearningPathOutput returned by the /generate endpoint.
     """
     return await learning_path_service.save_learning_path(
         str(current_user.id),
