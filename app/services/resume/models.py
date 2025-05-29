@@ -51,7 +51,7 @@ class ResumeAnalysisOutput(BaseModel):
     # Target information
     industry: str = Field(..., description="Industry the analysis is for")
     jobTitle: str = Field(..., description="Target job title")
-
+    
 
 class ImprovedResumeOutput(BaseModel):
     """Simplified output model for the improved resume with only markdown and changes summary"""

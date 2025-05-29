@@ -62,39 +62,51 @@ class SkillGapAIService(BaseAIService):
         ## JOB DESCRIPTION:
         {job_description}
         
-        Provide the analysis in this exact JSON structure with these exact fields:
+        Your analysis must be extremely detailed and provide a comprehensive assessment with the following sections:
         
-        1. job_title: Extract the exact job title from the job description
-        2. match_percentage: Calculate a precise match percentage (0-100) based on all requirements
+        1. JOB TITLE AND MATCH PERCENTAGE:
+           - Extract the exact job title
+           - Calculate a precise match percentage based on all requirements
+           
+        2. MATCHED SKILLS ANALYSIS:
+           - For each skill, provide:
+             * The exact skill name as mentioned in the job description
+             * Proficiency level (Beginner, Intermediate, Advanced, Expert)
+             * Match score (percentage of how well this skill matches the job requirements)
+             * Direct quotes/context from the resume demonstrating this skill
+             * Whether this skill meets, exceeds, or only partially meets the job requirement
+           
+        3. MISSING SKILLS ANALYSIS:
+           - For each missing or underdeveloped skill:
+             * The exact skill/requirement from the job description
+             * Importance level (Critical, Important, Nice-to-Have)
+             * Detailed description of what this skill entails in the context of this specific role
+             * Why this skill matters for this particular position
+             * 3-5 specific learning resources with direct URLs, time commitments, and difficulty levels
+           
+        4. PROJECT RECOMMENDATIONS:
+           - 3-5 highly specific projects that:
+             * Target the exact missing skills for this role
+             * Include detailed step-by-step implementation plans
+             * Specify technologies, tools, and methodologies to use
+             * Explain how each project directly addresses requirements in the job description
+             * Provide metrics to demonstrate competency upon completion
+           
+        5. RESUME IMPROVEMENT SUGGESTIONS:
+           - Section-by-section improvement recommendations
+           - Examples of stronger phrasing for existing achievements
+           - Specific keywords from the job description to incorporate
+           - Skills to emphasize more prominently
+           * Format and presentation improvements for ATS optimization
+           
+        6. OVERALL ASSESSMENT:
+           - Detailed evaluation of overall fit for the role
+           - Specific timeframe and learning path to become fully qualified
+           - Honest assessment of biggest obstacles and how to overcome them
+           - Direct recommendations on whether to apply now or after addressing gaps
+           - Alternative roles that might be better fits based on current qualifications
         
-        3. matched_skills: Array of matched skills, each with exactly these fields:
-           - skill: The exact skill name as mentioned in the job description
-           - level: Proficiency level (Beginner, Intermediate, Advanced, Expert)
-           - match_score: A decimal from 0 to 1 indicating how well this skill matches
-           - context: Direct quotes from the resume demonstrating this skill (optional)
-           
-        4. missing_skills: Array of missing skills, each with exactly these fields:
-           - skill: The exact skill/requirement from the job description
-           - importance: Importance level (Critical, Important, Nice to have)
-           - description: Description of the skill and why it's important for this role
-           - learning_resources: Array of resource objects with "name", "url", "type" keys
-           
-        5. project_recommendations: Array of projects, each with exactly these fields:
-           - title: Title of the recommended project
-           - description: Detailed description of the project
-           - skills_addressed: Array of skills this project will help develop
-           - difficulty: Difficulty level (Easy, Moderate, Challenging)
-           - estimated_time: Time estimate (e.g., "2 weeks", "1 month")
-           - resources: Array of resource objects with "name", "url", "type" keys
-           
-        6. improvement_suggestions: Object with categories as keys and arrays of suggestions as values, such as:
-           - "resume_format": ["suggestion1", "suggestion2"]
-           - "skills_to_emphasize": ["skill1", "skill2"]
-           - "experience_presentation": ["suggestion1", "suggestion2"]
-           
-        7. overall_assessment: A comprehensive paragraph assessment
-        
-        IMPORTANT: Use ONLY the exact field names listed above. Do not add any additional fields like "meets_requirement" or "why_it_matters". The response must match the schema exactly.
+        Remember, be brutally honest yet constructive, extremely detailed, and provide actionable advice that the candidate can immediately implement. Focus on being comprehensive yet practical.
         """
         
         # Make request to Groq
