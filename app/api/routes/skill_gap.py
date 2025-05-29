@@ -2,55 +2,34 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile,
 from typing import List, Optional, Dict
 
 from app.services import SkillGapService
-from app.models.skill_gap import SkillGapAnalysis, ProjectRecommendation, SkillGapAnalysisRequest
+from app.models.skill_gap import SkillGap, ProjectRecommendation, SkillGapAnalysisRequest
+from app.schemas.skill_gap import SkillGapAnalysisOutput
 from app.models.user import User
 from app.api.dependencies.auth import get_current_active_user
 
 router = APIRouter(prefix="/skill-gap", tags=["skill gap analysis"])
 skill_gap_service = SkillGapService()
 
-@router.post("/analyze", response_model=SkillGapAnalysis)
+@router.post("/analyze", response_model=SkillGapAnalysisOutput)
 async def analyze_skill_gap(
-    resume_text: Optional[str] = Form(None),
-    resume_file: Optional[UploadFile] = File(None),
-    resume_id: Optional[str] = Form(None),
-    job_description: Optional[str] = Form(None),
+    resume_id: str = Form(...),
+    job_description: str = Form(...),
     job_posting_url: Optional[str] = Form(None),
-    github_url: Optional[str] = Form(None),
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    Analyze skill gap between resume and job requirements
+    Analyze skill gap between a resume and job requirements
     
-    This endpoint automatically saves the analysis to the user's history.
-    You can provide resume data in one of three ways:
-    - Upload a resume file
-    - Provide resume text directly
-    - Reference a previously stored resume by ID
+    This endpoint analyzes the skill gap using a previously stored resume.
+    The analysis is automatically saved to the user's history.
     """
-    # Validate input - must have either resume_text, resume_file, or resume_id
-    if not resume_text and not resume_file and not resume_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either resume text, resume file, or resume ID must be provided"
-        )
-    
-    # Validate input - must have either job_description or job_posting_url
-    if not job_description and not job_posting_url:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either job description or job posting URL must be provided"
-        )
     
     # Perform the analysis and save it to the database
-    return await skill_gap_service.analyze_skills(
+    return await skill_gap_service.analyze_skill_gap(
         user_id=str(current_user.id),
-        resume_text=resume_text,
-        resume_file=resume_file,
         resume_id=resume_id,
         job_description=job_description,
-        job_posting_url=job_posting_url,
-        github_url=github_url
+        job_posting_url=job_posting_url
     )
 
 @router.post("/fetch-job-description")
@@ -67,7 +46,7 @@ async def fetch_job_description(
             detail="Job posting URL is required"
         )
     
-    job_description = await skill_gap_service.ai_service.fetch_job_description(data["job_posting_url"])
+    job_description = await skill_gap_service.fetch_job_description(data["job_posting_url"])
     
     if not job_description or job_description.startswith("Error fetching"):
         raise HTTPException(
@@ -77,16 +56,16 @@ async def fetch_job_description(
     
     return {"job_description": job_description}
 
-@router.get("/history", response_model=List[SkillGapAnalysis])
+@router.get("/history", response_model=List[SkillGap])
 async def get_analysis_history(
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Get all skill gap analyses for the current user
     """
-    return await skill_gap_service.get_user_analyses(str(current_user.id))
+    return await skill_gap_service.get_skill_gap_analyses(str(current_user.id))
 
-@router.get("/history/{analysis_id}", response_model=SkillGapAnalysis)
+@router.get("/history/{analysis_id}", response_model=SkillGap)
 async def get_analysis_by_id(
     analysis_id: str,
     current_user: User = Depends(get_current_active_user)
@@ -94,15 +73,10 @@ async def get_analysis_by_id(
     """
     Get a specific skill gap analysis
     """
-    analysis = await skill_gap_service.get_analysis_by_id(analysis_id)
-    if not analysis:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Analysis with ID {analysis_id} not found"
-        )
+    analysis = await skill_gap_service.get_skill_gap_analysis(analysis_id)
     
     # Check if the analysis belongs to the current user
-    if analysis.userId != str(current_user.id):
+    if str(analysis.userId) != str(current_user.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this analysis"
@@ -118,23 +92,18 @@ async def delete_analysis(
     """
     Delete a skill gap analysis
     """
-    # Get the analysis to check ownership
-    analysis = await skill_gap_service.get_analysis_by_id(analysis_id)
-    if not analysis:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Analysis with ID {analysis_id} not found"
-        )
+    # Get the analysis to check ownership first
+    analysis = await skill_gap_service.get_skill_gap_analysis(analysis_id)
     
     # Check if the analysis belongs to the current user
-    if analysis.userId != str(current_user.id):
+    if str(analysis.userId) != str(current_user.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this analysis"
         )
     
     # Delete the analysis
-    success = await skill_gap_service.delete_analysis(analysis_id)
+    success = await skill_gap_service.delete_skill_gap_analysis(analysis_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
