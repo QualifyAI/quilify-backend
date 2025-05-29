@@ -39,12 +39,30 @@ class LearningPathRepository:
         """
         Get all learning paths for a user
         """
-        if not ObjectId.is_valid(user_id):
-            return []
-            
-        cursor = self.path_collection.find({"userId": ObjectId(user_id)})
-        paths = await cursor.to_list(length=100)
-        return [self._map_to_learning_path(path) for path in paths]
+        # Try both ObjectId and string formats to handle different ID storage methods
+        results = []
+        
+        # Try as ObjectId first
+        if ObjectId.is_valid(user_id):
+            try:
+                cursor = self.path_collection.find({"userId": ObjectId(user_id)})
+                obj_id_results = await cursor.to_list(length=100)
+                if obj_id_results:
+                    results.extend(obj_id_results)
+            except Exception as e:
+                print(f"ObjectId search failed: {e}")
+        
+        # Try as string if no results found
+        if not results:
+            try:
+                cursor = self.path_collection.find({"userId": user_id})
+                string_results = await cursor.to_list(length=100)
+                if string_results:
+                    results.extend(string_results)
+            except Exception as e:
+                print(f"String ID search failed: {e}")
+        
+        return [self._map_to_learning_path(path) for path in results]
     
     async def create_path(self, user_id: str, path_data: Dict[str, Any]) -> LearningPath:
         """

@@ -2,7 +2,7 @@ from typing import Dict, Optional
 from fastapi import HTTPException, status
 
 from app.db.repositories.skill_gap_repository import SkillGapRepository
-from app.models.skill_gap import SkillGap
+from app.models.skill_gap import SkillGapAnalysis
 from app.schemas.skill_gap import SkillGapAnalysisOutput
 from .skill_gap_ai_service import SkillGapAIService
 
@@ -53,16 +53,21 @@ class SkillGapService:
                 job_posting_url=job_posting_url
             )
             
-            # Store the analysis result
+            # Store the analysis result with correct field mapping
             skill_gap_data = {
-                "userId": user_id,
-                "resumeId": resume_id,
-                "jobDescription": job_description,
-                "jobPostingUrl": job_posting_url,
-                "analysisResult": analysis_result.model_dump()
+                "job_title": analysis_result.job_title,
+                "job_description": job_description,
+                "resume_text": resume.content,
+                "match_percentage": analysis_result.match_percentage,
+                "matched_skills": [skill.model_dump() for skill in analysis_result.matched_skills],
+                "missing_skills": [skill.model_dump() for skill in analysis_result.missing_skills],
+                "project_recommendations": [proj.model_dump() for proj in analysis_result.project_recommendations],
+                "improvement_suggestions": analysis_result.improvement_suggestions,
+                "overall_assessment": analysis_result.overall_assessment,
+                "job_posting_url": job_posting_url
             }
             
-            await self.repository.create_skill_gap_analysis(skill_gap_data)
+            await self.repository.create_analysis(user_id, skill_gap_data)
             
             return analysis_result
             
@@ -76,7 +81,7 @@ class SkillGapService:
                 detail=f"Error analyzing skill gap: {str(e)}"
             )
     
-    async def get_skill_gap_analyses(self, user_id: str) -> list[SkillGap]:
+    async def get_skill_gap_analyses(self, user_id: str) -> list[SkillGapAnalysis]:
         """
         Get all skill gap analyses for a user
         
@@ -84,11 +89,11 @@ class SkillGapService:
             user_id: ID of the user
             
         Returns:
-            List of SkillGap objects
+            List of SkillGapAnalysis objects
         """
-        return await self.repository.get_skill_gaps_by_user_id(user_id)
+        return await self.repository.get_analyses_by_user_id(user_id)
     
-    async def get_skill_gap_analysis(self, analysis_id: str) -> SkillGap:
+    async def get_skill_gap_analysis(self, analysis_id: str) -> SkillGapAnalysis:
         """
         Get a specific skill gap analysis
         
@@ -96,12 +101,12 @@ class SkillGapService:
             analysis_id: ID of the analysis
             
         Returns:
-            SkillGap object
+            SkillGapAnalysis object
             
         Raises:
             HTTPException: If analysis is not found
         """
-        analysis = await self.repository.get_skill_gap_by_id(analysis_id)
+        analysis = await self.repository.get_analysis_by_id(analysis_id)
         
         if not analysis:
             raise HTTPException(
@@ -124,7 +129,7 @@ class SkillGapService:
         Raises:
             HTTPException: If analysis is not found
         """
-        analysis = await self.repository.get_skill_gap_by_id(analysis_id)
+        analysis = await self.repository.get_analysis_by_id(analysis_id)
         
         if not analysis:
             raise HTTPException(
@@ -132,7 +137,7 @@ class SkillGapService:
                 detail=f"Skill gap analysis with ID {analysis_id} not found"
             )
             
-        return await self.repository.delete_skill_gap(analysis_id)
+        return await self.repository.delete_analysis(analysis_id)
             
     async def fetch_job_description(self, url: str) -> str:
         """

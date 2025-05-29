@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile,
 from typing import List, Optional, Dict
 
 from app.services import SkillGapService
-from app.models.skill_gap import SkillGap, ProjectRecommendation, SkillGapAnalysisRequest
+from app.models.skill_gap import SkillGapAnalysis, ProjectRecommendation, SkillGapAnalysisRequest
 from app.schemas.skill_gap import SkillGapAnalysisOutput
 from app.models.user import User
 from app.api.dependencies.auth import get_current_active_user
@@ -56,7 +56,7 @@ async def fetch_job_description(
     
     return {"job_description": job_description}
 
-@router.get("/history", response_model=List[SkillGap])
+@router.get("/history", response_model=List[SkillGapAnalysis])
 async def get_analysis_history(
     current_user: User = Depends(get_current_active_user)
 ):
@@ -65,7 +65,7 @@ async def get_analysis_history(
     """
     return await skill_gap_service.get_skill_gap_analyses(str(current_user.id))
 
-@router.get("/history/{analysis_id}", response_model=SkillGap)
+@router.get("/history/{analysis_id}", response_model=SkillGapAnalysis)
 async def get_analysis_by_id(
     analysis_id: str,
     current_user: User = Depends(get_current_active_user)
