@@ -1,43 +1,45 @@
-from typing import List, Dict, Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
-class SkillMatchOutput(BaseModel):
-    """
-    Output schema for a matched skill
-    """
-    skill: str = Field(..., description="The name of the skill that was matched")
-    level: str = Field(..., description="The level of proficiency demonstrated in the resume (Expert, Advanced, Intermediate, Beginner)")
-    match_score: float = Field(..., description="A score from 0 to 1 indicating how well the skill matches the job requirement", ge=0, le=1)
-    context: Optional[str] = Field(None, description="Relevant context from the resume where this skill was demonstrated")
+class MatchedSkill(BaseModel):
+    """Simplified matched skill output"""
+    skill: str = Field(..., description="The skill name")
+    level: str = Field(..., description="Proficiency level: Beginner, Intermediate, Advanced, Expert")
+    evidence: str = Field(..., description="Evidence from resume showing this skill")
+    meets_requirement: bool = Field(..., description="Whether this skill fully meets the job requirement")
 
-class SkillGapOutput(BaseModel):
-    """
-    Output schema for a missing skill
-    """
-    skill: str = Field(..., description="The name of the skill that is missing or underdeveloped")
-    importance: str = Field(..., description="How important this skill is for the job (Critical, Important, Nice to have)")
-    description: str = Field(..., description="Description of the skill and why it's important for the role")
-    learning_resources: List[Dict[str, str]] = Field(..., description="List of resources to help learn this skill (books, courses, tutorials)")
+class MissingSkill(BaseModel):
+    """Simplified missing skill output"""
+    skill: str = Field(..., description="The missing skill name")
+    importance: str = Field(..., description="Critical, Important, or Nice-to-Have")
+    why_needed: str = Field(..., description="Why this skill is needed for the role")
+    learning_path: str = Field(..., description="Specific steps to learn this skill")
 
-class ProjectRecommendationOutput(BaseModel):
-    """
-    Output schema for a recommended project
-    """
-    title: str = Field(..., description="Title of the recommended project")
-    description: str = Field(..., description="Detailed description of the project and what it involves")
-    skills_addressed: List[str] = Field(..., description="List of skills this project will help develop")
-    difficulty: str = Field(..., description="Difficulty level of the project (Easy, Moderate, Challenging)")
-    estimated_time: str = Field(..., description="Estimated time to complete the project")
-    resources: List[Dict[str, str]] = Field(..., description="List of resources to help with the project")
+class ProjectRecommendation(BaseModel):
+    """Simplified project recommendation"""
+    title: str = Field(..., description="Project title")
+    description: str = Field(..., description="What to build and how it helps")
+    skills_gained: str = Field(..., description="Comma-separated skills this project develops")
+    time_estimate: str = Field(..., description="Time needed to complete")
+    difficulty: str = Field(..., description="Easy, Medium, or Hard")
 
 class SkillGapAnalysisOutput(BaseModel):
-    """
-    Output schema for the complete skill gap analysis
-    """
-    job_title: str = Field(..., description="The title of the job being analyzed")
-    match_percentage: float = Field(..., description="Overall match percentage between the resume and job requirements", ge=0, le=100)
-    matched_skills: List[SkillMatchOutput] = Field(..., description="List of skills that match between the resume and job requirements")
-    missing_skills: List[SkillGapOutput] = Field(..., description="List of skills that are missing or underdeveloped")
-    project_recommendations: List[ProjectRecommendationOutput] = Field(..., description="Recommended projects to build to address skill gaps")
-    improvement_suggestions: Dict[str, List[str]] = Field(..., description="Specific suggestions for improving various aspects of the resume")
-    overall_assessment: str = Field(..., description="An overall assessment of the candidate's fit for the job")
+    """Simplified skill gap analysis output"""
+    job_title: str = Field(..., description="The job title being analyzed")
+    match_percentage: int = Field(..., description="Overall match percentage (0-100)", ge=0, le=100)
+    
+    # Matched skills - simplified structure
+    matched_skills: List[MatchedSkill] = Field(..., description="Skills that match the job requirements")
+    
+    # Missing skills - simplified structure  
+    missing_skills: List[MissingSkill] = Field(..., description="Skills that are missing or need improvement")
+    
+    # Project recommendations - simplified structure
+    project_recommendations: List[ProjectRecommendation] = Field(..., description="Specific projects to build missing skills")
+    
+    # Simple string fields for key insights
+    top_strengths: str = Field(..., description="Top 3 strengths from the resume")
+    biggest_gaps: str = Field(..., description="Top 3 most critical skill gaps")
+    next_steps: str = Field(..., description="Immediate actionable steps to improve candidacy")
+    timeline_to_ready: str = Field(..., description="Realistic timeline to become job-ready")
+    overall_assessment: str = Field(..., description="Honest assessment of current fit and potential")

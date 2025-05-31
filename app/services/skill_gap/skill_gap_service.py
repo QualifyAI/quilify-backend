@@ -37,7 +37,9 @@ class SkillGapService:
         
         # Get the resume
         try:
+            print(f"Getting resume with ID: {resume_id}")
             resume = await resume_service.get_resume(resume_id)
+            print(f"Resume retrieved successfully: {resume.title}")
             
             # Check if resume belongs to user
             if resume.userId != user_id:
@@ -46,6 +48,7 @@ class SkillGapService:
                     detail="Not authorized to access this resume"
                 )
             
+            print(f"Starting AI analysis for job: {job_description[:100]}...")
             # Use AI service to perform analysis
             analysis_result = await self.ai_service.analyze_skill_gap(
                 resume_text=resume.content,
@@ -53,7 +56,12 @@ class SkillGapService:
                 job_posting_url=job_posting_url
             )
             
-            # Store the analysis result with correct field mapping
+            print(f"AI analysis completed successfully")
+            print(f"Analysis result type: {type(analysis_result)}")
+            print(f"Job title: {analysis_result.job_title}")
+            print(f"Match percentage: {analysis_result.match_percentage}")
+            
+            # Store the analysis result with correct field mapping for simplified model
             skill_gap_data = {
                 "job_title": analysis_result.job_title,
                 "job_description": job_description,
@@ -62,12 +70,17 @@ class SkillGapService:
                 "matched_skills": [skill.model_dump() for skill in analysis_result.matched_skills],
                 "missing_skills": [skill.model_dump() for skill in analysis_result.missing_skills],
                 "project_recommendations": [proj.model_dump() for proj in analysis_result.project_recommendations],
-                "improvement_suggestions": analysis_result.improvement_suggestions,
+                "top_strengths": analysis_result.top_strengths,
+                "biggest_gaps": analysis_result.biggest_gaps,
+                "next_steps": analysis_result.next_steps,
+                "timeline_to_ready": analysis_result.timeline_to_ready,
                 "overall_assessment": analysis_result.overall_assessment,
                 "job_posting_url": job_posting_url
             }
             
+            print(f"Storing analysis in database for user: {user_id}")
             await self.repository.create_analysis(user_id, skill_gap_data)
+            print(f"Analysis stored successfully")
             
             return analysis_result
             
@@ -75,7 +88,11 @@ class SkillGapService:
             # Re-raise HTTP exceptions
             raise
         except Exception as e:
-            # Handle other exceptions
+            # Handle other exceptions with detailed logging
+            print(f"Error in analyze_skill_gap: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            print(f"Full traceback: {traceback.format_exc()}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error analyzing skill gap: {str(e)}"

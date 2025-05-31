@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from bs4 import BeautifulSoup
 
 from app.services.ai.base_ai_service import BaseAIService
-from app.services.skill_gap.models import SkillGapAnalysisOutput
+from app.schemas.skill_gap import SkillGapAnalysisOutput
 
 class SkillGapAIService(BaseAIService):
     """Service for AI-based skill gap analysis"""
@@ -25,100 +25,66 @@ class SkillGapAIService(BaseAIService):
         Returns:
             SkillGapAnalysisOutput containing detailed analysis
         """
-        # Create the system prompt
+        # Simplified system prompt focused on actionable insights
         system_prompt = """
-        You are a senior executive recruiter and career strategist with 15+ years of experience in technical recruiting, talent acquisition, and career development. Your specialization is in performing extremely detailed skill gap analyses for candidates.
+        You are an expert technical recruiter and career mentor with 15+ years of experience. 
+        Your goal is to provide extremely helpful, specific, and actionable skill gap analysis.
         
-        Your analytical methodology is exceptional and thorough, always considering:
-        1. Explicit technical skills (languages, frameworks, tools)
-        2. Implicit technical capabilities (problem-solving approach, architectural thinking)
-        3. Domain knowledge and industry expertise
-        4. Soft skills and leadership capabilities
-        5. Cultural fit indicators
-        6. Growth potential and adaptability
+        Focus on:
+        - Being brutally honest but constructive
+        - Providing specific, actionable advice
+        - Identifying the most critical gaps first
+        - Giving realistic timelines and learning paths
+        - Recommending practical projects that directly address gaps
         
-        When analyzing a resume against a job description:
-        
-        - Be extremely granular and specific - don't just identify "Python" as a skill, specify the level, applications, and frameworks
-        - Provide detailed evidence and context from the resume that demonstrates each skill
-        - For missing skills, categorize them by criticality (Critical, Important, Nice-to-Have)
-        - For each missing skill, provide multiple specific, actionable learning resources with URLs, descriptions, and time commitments
-        - Recommend detailed, step-by-step projects that specifically address skill gaps
-        - Provide extremely specific resume improvement suggestions that would dramatically increase match rate
-        - Offer direct, actionable advice framed as "you should..." rather than general observations
-        
-        Your analysis must be thorough yet practical - provide guidance as if the candidate is sitting across from you in a 1:1 coaching session and you're walking through exactly what they need to do to qualify for this role.
-        
-        Remember, the candidate is relying on your expertise to understand exactly where they stand and what specific actions they must take to succeed.
+        Keep your analysis practical and immediately actionable.
         """
         
-        # Create the user prompt
+        # Simplified user prompt with clear structure
         user_prompt = f"""
-        Please conduct an in-depth skill gap analysis for this candidate against the specific job requirements:
+        Analyze this resume against the job requirements and provide specific, actionable insights:
         
-        ## RESUME:
+        RESUME:
         {resume_text}
         
-        ## JOB DESCRIPTION:
+        JOB DESCRIPTION:
         {job_description}
         
-        Your analysis must be extremely detailed and provide a comprehensive assessment with the following sections:
+        Provide your analysis in this exact format:
         
-        1. JOB TITLE AND MATCH PERCENTAGE:
-           - Extract the exact job title
-           - Calculate a precise match percentage based on all requirements
-           
-        2. MATCHED SKILLS ANALYSIS:
-           - For each skill, provide:
-             * The exact skill name as mentioned in the job description
-             * Proficiency level (Beginner, Intermediate, Advanced, Expert)
-             * Match score (percentage of how well this skill matches the job requirements)
-             * Direct quotes/context from the resume demonstrating this skill
-             * Whether this skill meets, exceeds, or only partially meets the job requirement
-           
-        3. MISSING SKILLS ANALYSIS:
-           - For each missing or underdeveloped skill:
-             * The exact skill/requirement from the job description
-             * Importance level (Critical, Important, Nice-to-Have)
-             * Detailed description of what this skill entails in the context of this specific role
-             * Why this skill matters for this particular position
-             * 3-5 specific learning resources with direct URLs, time commitments, and difficulty levels
-           
-        4. PROJECT RECOMMENDATIONS:
-           - 3-5 highly specific projects that:
-             * Target the exact missing skills for this role
-             * Include detailed step-by-step implementation plans
-             * Specify technologies, tools, and methodologies to use
-             * Explain how each project directly addresses requirements in the job description
-             * Provide metrics to demonstrate competency upon completion
-           
-        5. RESUME IMPROVEMENT SUGGESTIONS:
-           - Section-by-section improvement recommendations
-           - Examples of stronger phrasing for existing achievements
-           - Specific keywords from the job description to incorporate
-           - Skills to emphasize more prominently
-           * Format and presentation improvements for ATS optimization
-           
-        6. OVERALL ASSESSMENT:
-           - Detailed evaluation of overall fit for the role
-           - Specific timeframe and learning path to become fully qualified
-           - Honest assessment of biggest obstacles and how to overcome them
-           - Direct recommendations on whether to apply now or after addressing gaps
-           - Alternative roles that might be better fits based on current qualifications
+        1. Extract the job title from the job description
+        2. Calculate match percentage (0-100) based on how well the resume fits
+        3. List matched skills with evidence from resume
+        4. List missing critical skills with specific learning paths
+        5. Recommend 3-5 specific projects to build missing skills
+        6. Identify top 3 strengths and top 3 gaps
+        7. Give immediate next steps and realistic timeline
+        8. Provide honest overall assessment
         
-        Remember, be brutally honest yet constructive, extremely detailed, and provide actionable advice that the candidate can immediately implement. Focus on being comprehensive yet practical.
+        Be specific, actionable, and focus on what the candidate can do immediately to improve their chances.
         """
         
-        # Make request to Groq
+        # Make request to Groq with simplified approach
         try:
+            print(f"Making Groq request for skill gap analysis...")
+            print(f"Resume text length: {len(resume_text)}")
+            print(f"Job description length: {len(job_description)}")
+            
             result = await self._make_groq_request(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 response_model=SkillGapAnalysisOutput,
-                temperature=0.2  # Lower temperature for more focused, consistent results
+                temperature=0.1  # Very low temperature for consistent, focused results
             )
+            
+            print(f"Groq request successful, got result: {type(result)}")
             return result
         except Exception as e:
+            # Log the full error details
+            print(f"Skill gap analysis failed with error: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            print(f"Full traceback: {traceback.format_exc()}")
             # Re-raise with more specific context
             raise Exception(f"Skill gap analysis failed: {str(e)}")
     
@@ -144,7 +110,6 @@ class SkillGapAIService(BaseAIService):
             soup = BeautifulSoup(response.text, 'html.parser')
             
             # Try to find the job description section
-            # This is a basic implementation and may need to be customized for different job sites
             job_description = ""
             
             # LinkedIn
@@ -201,29 +166,13 @@ class SkillGapAIService(BaseAIService):
         """
         if not text:
             return ""
-            
-        # Remove excessive whitespace
-        text = ' '.join(text.split())
         
-        # Replace multiple newlines with a single newline
-        import re
-        text = re.sub(r'\n+', '\n', text)
+        # Remove extra whitespace and normalize
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        cleaned_text = '\n'.join(lines)
         
-        # Remove very common boilerplate text about the company
-        boilerplate_phrases = [
-            "Equal Opportunity Employer",
-            "We are an equal opportunity employer",
-            "We're an equal opportunity employer",
-            "diversity and inclusion",
-            "About the company",
-            "About us"
-        ]
+        # Remove excessive newlines
+        while '\n\n\n' in cleaned_text:
+            cleaned_text = cleaned_text.replace('\n\n\n', '\n\n')
         
-        for phrase in boilerplate_phrases:
-            if phrase.lower() in text.lower():
-                # Only remove if it appears near the end of the description
-                idx = text.lower().find(phrase.lower())
-                if idx > 0.7 * len(text):  # If in the last 30% of the text
-                    text = text[:idx]
-        
-        return text.strip() 
+        return cleaned_text.strip() 

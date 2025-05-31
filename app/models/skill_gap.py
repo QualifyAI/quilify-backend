@@ -1,65 +1,58 @@
 from datetime import datetime
-from typing import List, Optional, ClassVar, Dict, Any
+from typing import List, Optional, ClassVar, Any
 from bson import ObjectId
 from pydantic import BaseModel, Field
 
 from app.models.user import PyObjectId
 
-class SkillMatch(BaseModel):
-    """
-    Represents a match between a user's skill and a job requirement
-    """
+class MatchedSkill(BaseModel):
+    """Simplified matched skill model"""
     skill: str
-    level: str  # e.g., "Expert", "Intermediate", "Beginner"
-    match_score: float  # 0-1 score indicating how well the skill matches
-    context: Optional[str] = None  # Context from resume where skill was found
+    level: str  # Beginner, Intermediate, Advanced, Expert
+    evidence: str  # Evidence from resume showing this skill
+    meets_requirement: bool  # Whether this skill fully meets the job requirement
     
     model_config: ClassVar[dict] = {
         "from_attributes": True
     }
 
-class SkillGap(BaseModel):
-    """
-    Represents a missing or underdeveloped skill
-    """
+class MissingSkill(BaseModel):
+    """Simplified missing skill model"""
     skill: str
-    importance: str  # e.g., "Critical", "Important", "Nice to have"
-    description: str
-    learning_resources: List[Dict[str, str]]  # List of resources to learn the skill
+    importance: str  # Critical, Important, Nice-to-Have
+    why_needed: str  # Why this skill is needed for the role
+    learning_path: str  # Specific steps to learn this skill
     
     model_config: ClassVar[dict] = {
         "from_attributes": True
     }
 
 class ProjectRecommendation(BaseModel):
-    """
-    Recommended project to build to address skill gaps
-    """
+    """Simplified project recommendation model"""
     title: str
-    description: str
-    skills_addressed: List[str]
-    difficulty: str
-    estimated_time: str
-    resources: List[Dict[str, str]]
+    description: str  # What to build and how it helps
+    skills_gained: str  # Comma-separated skills this project develops
+    time_estimate: str  # Time needed to complete
+    difficulty: str  # Easy, Medium, or Hard
     
     model_config: ClassVar[dict] = {
         "from_attributes": True
     }
 
 class SkillGapAnalysisBase(BaseModel):
-    """
-    Base skill gap analysis model
-    """
+    """Base skill gap analysis model with simplified structure"""
     job_title: str
     job_description: str
     resume_text: str
-    match_percentage: float
-    matched_skills: List[SkillMatch]
-    missing_skills: List[SkillGap]
+    match_percentage: int  # 0-100 percentage
+    matched_skills: List[MatchedSkill]
+    missing_skills: List[MissingSkill]
     project_recommendations: List[ProjectRecommendation]
-    improvement_suggestions: Dict[str, List[str]]
-    overall_assessment: str
-    
+    top_strengths: str  # Top 3 strengths from the resume
+    biggest_gaps: str  # Top 3 most critical skill gaps
+    next_steps: str  # Immediate actionable steps to improve candidacy
+    timeline_to_ready: str  # Realistic timeline to become job-ready
+    overall_assessment: str  # Honest assessment of current fit and potential
 
 class SkillGapAnalysisInDB(SkillGapAnalysisBase):
     """

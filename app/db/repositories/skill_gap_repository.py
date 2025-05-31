@@ -123,7 +123,10 @@ class SkillGapRepository:
             matched_skills=analysis_db["matched_skills"],
             missing_skills=analysis_db["missing_skills"],
             project_recommendations=analysis_db["project_recommendations"],
-            improvement_suggestions=analysis_db["improvement_suggestions"],
+            top_strengths=analysis_db["top_strengths"],
+            biggest_gaps=analysis_db["biggest_gaps"],
+            next_steps=analysis_db["next_steps"],
+            timeline_to_ready=analysis_db["timeline_to_ready"],
             overall_assessment=analysis_db["overall_assessment"],
             createdAt=analysis_db["createdAt"],
             job_posting_url=analysis_db.get("job_posting_url")
