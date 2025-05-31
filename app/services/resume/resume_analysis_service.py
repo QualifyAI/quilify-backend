@@ -62,15 +62,22 @@ class ResumeAnalysisService(BaseAIService):
         """
         # Create the system prompt - simpler and more direct
         system_prompt = """
-        You are an elite resume consultant with 20+ years of experience helping candidates land jobs at top companies.
+        I want you to act as my personal resume consultant with 20+ years of experience helping people like me land jobs at top companies.
+        You are analyzing MY resume and I need your honest, detailed feedback.
         
-        You will analyze the provided resume thoroughly and provide detailed, specific, and actionable feedback.
-        Write as if you are speaking directly to the candidate in first person.
+        Your goal is to provide me with extremely helpful, specific, and actionable advice that speaks directly to me.
+        
+        When you analyze my resume:
+        - Address me directly using "you" and "your" throughout your analysis
+        - Be brutally honest but constructive about my current resume
+        - Give me specific, actionable advice I can implement immediately
+        - Point out real flaws directly and tell me exactly how to fix them
+        - Use specific examples from MY resume in your feedback
+        - Speak to me as if we're having a one-on-one consultation session
         
         Your analysis MUST include:
-        
-        1. SPECIFIC examples from the resume - never be generic
-        2. CONCRETE, detailed recommendations that the candidate can immediately implement
+        1. SPECIFIC examples from my resume - never be generic
+        2. CONCRETE, detailed recommendations that I can immediately implement
         3. HONEST but constructive criticism - point out real flaws directly
         4. Direct comparisons to industry standards based on your expertise
         
@@ -79,68 +86,68 @@ class ResumeAnalysisService(BaseAIService):
         - Be extremely detailed and thorough
         - Use first-person language throughout (e.g., "Your resume shows..." or "I noticed...")
         - For each criticism, provide a specific example of how to improve it
-        - Include real examples from the resume in your analysis
-        - For bullet point examples, take ACTUAL bullets from their resume and show improved versions
+        - Include real examples from my resume in your analysis
+        - For bullet point examples, take ACTUAL bullets from my resume and show improved versions
         
-        The output will follow a predefined schema, but make your analysis extremely detailed and personalized.
+        Make your analysis comprehensive, detailed, and immediately actionable. I'm counting on your expertise to help me improve my resume.
         """
         
         # Create the user prompt - more concise and focused
         user_prompt = f"""
-        Please analyze this resume for a {job_title} position in the {industry} industry.
+        I want you to analyze MY resume for a {job_title} position in the {industry} industry and give me detailed, personal feedback.
         
-        RESUME TEXT:
+        MY RESUME TEXT:
         {resume_text}
         
-        Provide comprehensive feedback covering:
+        Please provide me with comprehensive feedback covering:
         
-        1. OVERALL ASSESSMENT - Give a detailed overall assessment (at least 3 paragraphs)
+        1. OVERALL ASSESSMENT - Give me a detailed overall assessment of my resume (at least 3 paragraphs)
         
         2. CONTENT ANALYSIS
-           - What specific strengths does the content have? (at least 3)
-           - What specific weaknesses in the content need improvement? (at least 3)
-           - What specific recommendations do you have to improve the content? (at least 3)
-           - Score the content quality from 0-100
+           - What specific strengths does my content have? (at least 3)
+           - What specific weaknesses in my content need improvement? (at least 3)
+           - What specific recommendations do you have to improve my content? (at least 3)
+           - Score my content quality from 0-100
         
         3. FORMATTING ANALYSIS
-           - What specific strengths does the formatting have? (at least 3)
-           - What specific weaknesses in formatting need improvement? (at least 3)
-           - What specific recommendations do you have to improve formatting? (at least 3)
-           - Score the formatting from 0-100
+           - What specific strengths does my formatting have? (at least 3)
+           - What specific weaknesses in my formatting need improvement? (at least 3)
+           - What specific recommendations do you have to improve my formatting? (at least 3)
+           - Score my formatting from 0-100
         
         4. IMPACT ANALYSIS
-           - What makes this resume impactful? (at least 3 specific strengths)
-           - What reduces the impact of this resume? (at least 3 specific weaknesses)
-           - How can the candidate make the resume more impactful? (at least 3 specific recommendations)
-           - Score the impact from 0-100
+           - What makes my resume impactful? (at least 3 specific strengths)
+           - What reduces the impact of my resume? (at least 3 specific weaknesses)
+           - How can I make my resume more impactful? (at least 3 specific recommendations)
+           - Score my impact from 0-100
         
         5. ATS COMPATIBILITY ANALYSIS
-           - What makes this resume ATS-friendly? (at least 3 specific strengths)
-           - What ATS issues does this resume have? (at least 3 specific weaknesses)
-           - How can the candidate improve ATS compatibility? (at least 3 specific recommendations)
-           - Score the ATS compatibility from 0-100
+           - What makes my resume ATS-friendly? (at least 3 specific strengths)
+           - What ATS issues does my resume have? (at least 3 specific weaknesses)
+           - How can I improve my ATS compatibility? (at least 3 specific recommendations)
+           - Score my ATS compatibility from 0-100
         
         6. TOP STRENGTHS & WEAKNESSES
-           - List at least 5 specific top strengths from the entire resume
-           - List at least 5 specific top weaknesses from the entire resume
+           - List at least 5 specific top strengths from my entire resume
+           - List at least 5 specific top weaknesses from my entire resume
         
         7. BULLET POINT IMPROVEMENTS
-           - Take at least 3 actual bullet points from the resume
+           - Take at least 3 actual bullet points from my resume
            - Provide improved versions that are more impactful and ATS-friendly
         
         8. KEYWORD ANALYSIS
-           - List at least 5 industry keywords already present in the resume
-           - List at least 5 important keywords missing from the resume
-           - Provide at least 3 specific recommendations for incorporating missing keywords
+           - List at least 5 industry keywords already present in my resume
+           - List at least 5 important keywords missing from my resume
+           - Provide at least 3 specific recommendations for incorporating missing keywords into my resume
         
         9. INDUSTRY COMPARISON
-           - Provide a detailed comparison (at least 2 paragraphs) of this resume to industry standards
-           - Be specific about how this resume compares to others you've seen for similar roles
+           - Provide a detailed comparison (at least 2 paragraphs) of my resume to industry standards
+           - Be specific about how my resume compares to others you've seen for similar roles
         
         10. OVERALL SCORE
-            - Provide an overall score from 0-100
+            - Provide an overall score for my resume from 0-100
         
-        Make this the most detailed, thorough, and helpful resume analysis possible.
+        Be specific, detailed, and speak directly to me. I want actionable advice that I can start implementing immediately. Don't hold back - I need your honest assessment to improve my career prospects.
         """
         
         # Make request to Groq
@@ -182,22 +189,22 @@ class ResumeAnalysisService(BaseAIService):
         """
         # Create system prompt with emphasis on beautiful formatting
         system_prompt = """
-        You are an elite resume designer with 20+ years of experience crafting visually stunning, ATS-optimized resumes 
-        for top executives and professionals. You've helped thousands of clients land jobs at Fortune 500 companies.
+        I want you to act as my personal resume designer with 20+ years of experience crafting visually stunning, ATS-optimized resumes 
+        for top executives and professionals. You've helped thousands of people like me land jobs at Fortune 500 companies.
         
-        Your task is to completely transform this resume into a masterpiece that combines:
-        1. Compelling, achievement-oriented content
+        Your task is to completely transform MY resume into a masterpiece that combines:
+        1. Compelling, achievement-oriented content that showcases my value
         2. Clean, modern design with perfect spacing and alignment
         3. Strategic keyword placement for ATS optimization
-        4. Visual hierarchy that guides the reader's eye
+        4. Visual hierarchy that guides the reader's eye to my best qualifications
         5. Perfect balance of white space and content density
         
         The output should be in Markdown format, but you MUST use advanced Markdown formatting to create 
-        a resume that looks professionally designed:
+        a resume that looks professionally designed and represents me in the best possible light:
         
-        - Use headings (# ## ###) strategically for section titles and name
+        - Use headings (# ## ###) strategically for section titles and my name
         - Use horizontal rules (---) to create visual separation
-        - Use bold and italics to emphasize key information
+        - Use bold and italics to emphasize my key information
         - Use tables for clean alignment of dates and locations
         - Use bullet points with proper indentation hierarchies
         - Add subtle Unicode symbols (like → ● ○ ■ □) where appropriate
@@ -205,8 +212,8 @@ class ResumeAnalysisService(BaseAIService):
         - Create visual distinction between sections
         
         IMPORTANT: Your response must ONLY include:
-        1. The complete, detailed markdown for the improved resume
-        2. A list of major changes made to improve the resume
+        1. The complete, detailed markdown for my improved resume
+        2. A list of major changes made to improve my resume
         
         Do not include any other information or analysis in your response.
         """
@@ -229,62 +236,62 @@ class ResumeAnalysisService(BaseAIService):
         
         # Create user prompt with detailed guidance on resume structure
         user_prompt = f"""
-        Transform this resume into a professional, visually appealing document for a {job_title} position in the {industry} industry.
+        I want you to transform MY resume into a professional, visually appealing document for a {job_title} position in the {industry} industry.
         
-        ## ORIGINAL RESUME:
+        ## MY ORIGINAL RESUME:
         {resume_text}
         
-        ## ANALYSIS FINDINGS:
-        Key issues to address:
+        ## ANALYSIS FINDINGS FROM MY RESUME:
+        Key issues in my resume to address:
         {chr(10).join(f"- {point}" for point in improvement_points)}
         
-        Key strengths to highlight:
+        Key strengths in my resume to highlight:
         {chr(10).join(f"- {strength}" for strength in strengths)}
         
-        ## BULLET POINT IMPROVEMENTS:
+        ## BULLET POINT IMPROVEMENTS FOR MY RESUME:
         {bullet_point_examples}
         
-        ## KEYWORD OPPORTUNITIES:
-        Missing keywords to add: {', '.join(analysis_result.keywordAnalysis.missing)}
-        Existing keywords to emphasize: {', '.join(analysis_result.keywordAnalysis.matched)}
+        ## KEYWORD OPPORTUNITIES FOR MY RESUME:
+        Missing keywords to add to my resume: {', '.join(analysis_result.keywordAnalysis.missing)}
+        Existing keywords in my resume to emphasize: {', '.join(analysis_result.keywordAnalysis.matched)}
         
-        ## DESIGN REQUIREMENTS:
-        Create a clean, modern resume with the following sections:
+        ## DESIGN REQUIREMENTS FOR MY RESUME:
+        Create a clean, modern resume for me with the following sections:
         
         1. HEADER
-           - Name (prominently displayed)
-           - Contact information (phone, email, LinkedIn, location)
-           - Optional: Professional title aligned with target job
+           - My name (prominently displayed)
+           - My contact information (phone, email, LinkedIn, location)
+           - Optional: Professional title aligned with my target job
         
         2. PROFESSIONAL SUMMARY
-           - Compelling 3-4 line summary highlighting key qualifications
-           - Include top keywords from the job title and industry
-           - Focus on unique value proposition and career highlights
+           - Compelling 3-4 line summary highlighting my key qualifications
+           - Include top keywords from my job title and industry
+           - Focus on my unique value proposition and career highlights
         
         3. SKILLS SECTION
            - Organized in categories (Technical, Professional, etc.)
-           - Prioritize keywords relevant to the job
-           - Include all matched keywords and add missing keywords
+           - Prioritize keywords relevant to my job
+           - Include all my matched keywords and add missing keywords
         
         4. PROFESSIONAL EXPERIENCE
            - Company name, location, job title with clear formatting
            - Dates formatted consistently (MM/YYYY or YYYY)
-           - Accomplishment-focused bullet points with metrics
+           - Accomplishment-focused bullet points with metrics from my experience
            - Start each bullet with strong action verbs
-           - Include 3-5 bullets per position, focused on achievements
+           - Include 3-5 bullets per position, focused on my achievements
         
         5. EDUCATION
-           - Degree, institution, graduation date
+           - My degree, institution, graduation date
            - Relevant coursework or achievements if applicable
         
-        6. ADDITIONAL SECTIONS (if relevant)
-           - Certifications
-           - Projects
-           - Volunteer work
-           - Publications/Patents
+        6. ADDITIONAL SECTIONS (if relevant to my background)
+           - My certifications
+           - My projects
+           - My volunteer work
+           - My publications/Patents
         
         ## MARKDOWN FORMATTING GUIDELINES:
-        - Use level 1 heading (#) for name
+        - Use level 1 heading (#) for my name
         - Use level 2 headings (##) for main sections
         - Use level 3 headings (###) for company names or degrees
         - Use **bold** for job titles and degrees
@@ -296,24 +303,24 @@ class ResumeAnalysisService(BaseAIService):
         - Use Unicode symbols (→, •, ◦, etc.) for visual enhancement
         
         ## CONTENT REQUIREMENTS:
-        - Transform all weak bullet points into achievement-focused statements
-        - Quantify achievements with metrics where possible (%, $, time saved)
+        - Transform all my weak bullet points into achievement-focused statements
+        - Quantify my achievements with metrics where possible (%, $, time saved)
         - Use strong action verbs at the start of each bullet
         - Eliminate first-person pronouns (I, me, my)
-        - Use present tense for current positions, past tense for previous roles
-        - Include relevant keywords naturally throughout
-        - Ensure all information from original resume is preserved with proper context
+        - Use present tense for my current positions, past tense for my previous roles
+        - Include relevant keywords naturally throughout my resume
+        - Ensure all information from my original resume is preserved with proper context
         
         ## RESPONSE FORMAT:
         Your response must ONLY include:
         
-        1. markdown: The complete, professionally formatted resume in markdown
+        1. markdown: The complete, professionally formatted resume in markdown for me
         
-        2. changesSummary: A list of 5-8 major changes you made to improve the resume
+        2. changesSummary: A list of 5-8 major changes you made to improve my resume
         
-        IMPORTANT: The resume markdown should be complete, detailed, and professional. Include ALL relevant information from the original resume.
+        IMPORTANT: The resume markdown should be complete, detailed, and professional. Include ALL relevant information from my original resume.
         
-        Create the most impressive, professional-looking resume possible that would pass any ATS system and impress any hiring manager.
+        Create the most impressive, professional-looking resume possible for me that would pass any ATS system and impress any hiring manager.
         """
         
         # Make request to Groq

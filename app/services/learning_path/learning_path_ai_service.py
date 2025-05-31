@@ -28,36 +28,37 @@ class LearningPathAIService(BaseAIService):
         """
         # Create the system prompt
         system_prompt = """
-        You are an expert education consultant specializing in personalized learning paths.
-        Your task is to create a set of questions that will help tailor a learning journey for
-        someone interested in a specific field.
+        I want you to act as my personal education consultant specializing in personalized learning paths.
+        You are helping ME create a customized learning journey for a field I'm interested in.
+        
+        Your task is to create a set of questions that will help tailor MY learning journey specifically for me.
         
         The questions should:
-        1. Cover different aspects of the learning experience (experience level, goals, time availability, etc.)
-        2. Have multiple choice answer options that represent meaningful distinctions
-        3. Help gather information that would meaningfully change how a learning path is structured
-        4. Be relevant to the specific field/niche the user is interested in
+        1. Cover different aspects of MY learning experience (my experience level, my goals, my time availability, etc.)
+        2. Have multiple choice answer options that represent meaningful distinctions for someone like me
+        3. Help gather information that would meaningfully change how MY learning path is structured
+        4. Be relevant to the specific field/niche I'm interested in
         
         Each question should have:
         - A unique ID (e.g., 'experience_level', 'primary_goal', 'time_available', etc.)
-        - A clear question statement
-        - 4-5 distinct answer options
+        - A clear question statement directed at me
+        - 4-5 distinct answer options that represent different approaches or preferences I might have
         
-        Your questions should help create a truly personalized learning experience.
+        Your questions should help create a truly personalized learning experience just for me.
         """
         
         # Create the user prompt
         user_prompt = f"""
-        Please generate 5-8 multiple choice questions for a user interested in the "{niche_name}" field.
+        I want you to generate 5-8 multiple choice questions for me since I'm interested in the "{niche_name}" field.
         
-        These questions will be used to customize a learning path specifically for this user based on 
-        their experience level, goals, and preferences.
+        These questions will be used to customize a learning path specifically for me based on 
+        my experience level, my goals, and my preferences.
         
         For each question:
-        - Create a clear, concise question statement
-        - Provide 4-5 distinct answer options that represent different approaches or preferences
+        - Create a clear, concise question statement directed at me
+        - Provide 4-5 distinct answer options that represent different approaches or preferences I might have
         - Ensure the options cover a range of possibilities (beginner to advanced, practical to theoretical, etc.)
-        - Make sure the question will provide useful information for customizing a learning journey
+        - Make sure the question will provide useful information for customizing MY learning journey
         
         Format the response as structured data according to the required schema.
         """
@@ -254,28 +255,28 @@ class LearningPathAIService(BaseAIService):
         """
         # Create the system prompt
         system_prompt = """
-        You are an expert education curriculum designer with deep expertise in creating personalized learning paths.
-        Your task is to design a comprehensive, structured learning journey for a user based on their specific field
-        of interest and their answers to personalization questions.
+        I want you to act as my personal education curriculum designer with deep expertise in creating personalized learning paths.
+        You are designing a comprehensive, structured learning journey specifically for ME based on my specific field
+        of interest and my answers to personalization questions.
         
         The learning path you create should:
-        1. Be tailored to the user's experience level, goals, and preferences
-        2. Follow a logical progression from foundational to advanced concepts
-        3. Provide realistic time estimates for each module
-        4. Include clear module objectives and topics
-        5. Cover both theoretical knowledge and practical applications
+        1. Be tailored to MY experience level, goals, and preferences
+        2. Follow a logical progression from foundational to advanced concepts that makes sense for me
+        3. Provide realistic time estimates for each module based on my availability
+        4. Include clear module objectives and topics that align with my goals
+        5. Cover both theoretical knowledge and practical applications that I can use
         
         In this FIRST PHASE, focus on creating a high-level structure with:
-        - A compelling title and description for the overall learning path
-        - 4-7 well-structured modules that build upon each other
-        - Clear progression and estimated timelines
-        - Key topics for each module
-        - Basic tips for each module
+        - A compelling title and description for MY overall learning path
+        - 4-7 well-structured modules that build upon each other for my learning journey
+        - Clear progression and estimated timelines that work for me
+        - Key topics for each module that I need to learn
+        - Basic tips for each module to help me succeed
         
         DO NOT focus on detailed resources or subtopics yet - these will be expanded in the next phase.
         Keep resource links minimal as they will be replaced in a later phase.
         
-        Create a compelling, logical learning journey that will take the user from their current level to their goal.
+        Create a compelling, logical learning journey that will take me from my current level to my goal.
         """
         
         # Format the answers as a readable string
@@ -283,26 +284,26 @@ class LearningPathAIService(BaseAIService):
         
         # Create the user prompt
         user_prompt = f"""
-        Please create the high-level framework for a personalized learning path for someone interested in the "{niche_name}" field.
+        I want you to create the high-level framework for MY personalized learning path since I'm interested in the "{niche_name}" field.
         
-        ## USER PROFILE:
-        Based on their answers to personalization questions:
+        ## MY PROFILE:
+        Based on my answers to personalization questions:
         {formatted_answers}
         
         Please design a comprehensive learning path STRUCTURE that:
-        - Is tailored specifically to this user's experience level, goals, and preferences
-        - Provides a clear progression from fundamentals to advanced concepts
-        - Includes 4-7 well-defined modules that build on each other
-        - Provides realistic time estimates for completion
-        - Includes basic tips for each module
+        - Is tailored specifically to MY experience level, goals, and preferences
+        - Provides a clear progression from fundamentals to advanced concepts for me
+        - Includes 4-7 well-defined modules that build on each other for my learning journey
+        - Provides realistic time estimates for completion based on my availability
+        - Includes basic tips for each module to help me succeed
         
         In addition to the standard module information, please also include:
-        - An overview of the entire learning journey
-        - General prerequisites for the learning path
-        - Who the learning path is intended for
-        - Potential career outcomes after completion
+        - An overview of MY entire learning journey
+        - General prerequisites for MY learning path
+        - Who this learning path is intended for (people like me)
+        - Potential career outcomes for me after completion
         
-        Remember, this is just the FRAMEWORK. We will expand each module with detailed subtopics and resources in the next step.
+        Remember, this is just the FRAMEWORK for MY learning path. We will expand each module with detailed subtopics and resources in the next step.
         Format the response according to the required schema.
         """
         

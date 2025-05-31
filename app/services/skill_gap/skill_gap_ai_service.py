@@ -25,43 +25,69 @@ class SkillGapAIService(BaseAIService):
         Returns:
             SkillGapAnalysisOutput containing detailed analysis
         """
-        # Simplified system prompt focused on actionable insights
+        # Personal, direct system prompt
         system_prompt = """
-        You are an expert technical recruiter and career mentor with 15+ years of experience. 
-        Your goal is to provide extremely helpful, specific, and actionable skill gap analysis.
+        I want you to act as my personal career mentor and technical recruiter with 15+ years of experience. 
+        You are analyzing MY resume against a specific job I'm interested in.
         
-        Focus on:
-        - Being brutally honest but constructive
-        - Providing specific, actionable advice
-        - Identifying the most critical gaps first
-        - Giving realistic timelines and learning paths
-        - Recommending practical projects that directly address gaps
+        Your goal is to provide me with extremely helpful, specific, and actionable advice that speaks directly to me.
         
-        Keep your analysis practical and immediately actionable.
+        When you analyze my resume:
+        - Address me directly using "you" and "your" 
+        - Be brutally honest but constructive about my current standing
+        - Give me specific, actionable advice I can implement immediately
+        - Identify the most critical gaps I need to address first
+        - Provide realistic timelines and learning paths tailored to my background
+        - Recommend practical projects that directly address my skill gaps
+        - Speak to me as if we're having a one-on-one career coaching session
+        
+        Make your analysis comprehensive, detailed, and immediately actionable. I'm counting on your expertise to guide my career development.
         """
         
-        # Simplified user prompt with clear structure
+        # Personal, direct user prompt
         user_prompt = f"""
-        Analyze this resume against the job requirements and provide specific, actionable insights:
+        I want you to analyze my resume against this job I'm interested in and give me detailed, personal feedback:
         
-        RESUME:
+        MY RESUME:
         {resume_text}
         
-        JOB DESCRIPTION:
+        JOB I'M TARGETING:
         {job_description}
         
-        Provide your analysis in this exact format:
+        Please provide me with a comprehensive analysis that includes:
         
-        1. Extract the job title from the job description
-        2. Calculate match percentage (0-100) based on how well the resume fits
-        3. List matched skills with evidence from resume
-        4. List missing critical skills with specific learning paths
-        5. Recommend 3-5 specific projects to build missing skills
-        6. Identify top 3 strengths and top 3 gaps
-        7. Give immediate next steps and realistic timeline
-        8. Provide honest overall assessment
+        1. Extract the exact job title and calculate how well my resume matches (0-100%)
         
-        Be specific, actionable, and focus on what the candidate can do immediately to improve their chances.
+        2. Analyze my matched skills - for each skill I already have:
+           - Tell me what skill you found in my resume
+           - Assess my proficiency level (Beginner, Intermediate, Advanced, Expert)
+           - Quote specific evidence from my resume that demonstrates this skill
+           - Tell me whether my experience fully meets the job requirement or only partially
+        
+        3. Identify my skill gaps - for each missing or weak skill:
+           - Tell me exactly what skill I'm missing
+           - Explain how critical this skill is (Critical, Important, Nice-to-Have)
+           - Explain why I need this skill for this specific role
+           - Give me a detailed, step-by-step learning path with specific resources, timeframes, and milestones
+        
+        4. Recommend specific projects I should build:
+           - Give me 3-5 concrete project ideas that will address my skill gaps
+           - For each project, tell me exactly what to build and how it helps
+           - List the specific skills I'll gain from each project
+           - Give me realistic time estimates and difficulty levels
+           - Explain how each project directly addresses requirements in the job description
+        
+        5. Summarize my top 3 strengths that make me a good fit for this role
+        
+        6. Identify my 3 biggest gaps that could prevent me from getting this job
+        
+        7. Give me immediate next steps - specific actions I can take this week to improve my candidacy
+        
+        8. Provide a realistic timeline for when I'll be ready to confidently apply for this role
+        
+        9. Give me an honest overall assessment of my current fit and potential for this position
+        
+        Be specific, detailed, and speak directly to me. I want actionable advice that I can start implementing immediately. Don't hold back - I need your honest assessment to improve my career prospects.
         """
         
         # Make request to Groq with simplified approach
