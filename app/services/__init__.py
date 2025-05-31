@@ -5,7 +5,7 @@ from .learning_path.learning_path_service import LearningPathService
 from .skill_gap.skill_gap_service import SkillGapService
 
 # AI services
-from .resume.resume_analysis_service import ResumeAnalysisService, ResumeAnalysisOutput, ImprovedResumeOutput
+from .resume.resume_analysis_service import ResumeAnalysisService, ResumeAnalysisOutput, ImprovedResumeOutput, SimpleImprovedResumeOutput
 from .learning_path.learning_path_ai_service import LearningPathAIService
 from .skill_gap.skill_gap_ai_service import SkillGapAIService
 
@@ -32,5 +32,6 @@ __all__ = [
     
     # Output models (for backward compatibility)
     'ResumeAnalysisOutput',
-    'ImprovedResumeOutput'
+    'ImprovedResumeOutput',
+    'SimpleImprovedResumeOutput'
 ]

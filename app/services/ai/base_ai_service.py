@@ -51,7 +51,7 @@ class BaseAIService:
                 response_model=response_model,
                 messages=messages,
                 temperature=temperature,
-                max_tokens=24000  # Increased from 16000 to allow for more detailed responses
+                max_tokens=29000  # Increased from 16000 to allow for more detailed responses
             )
             return response
         except Exception as e:

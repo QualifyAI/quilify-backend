@@ -1,17 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from typing import Optional, List
 from pydantic import BaseModel
 from datetime import datetime
 
 from app.models.user import User
-from app.services import ResumeAnalysisService, ResumeService, ResumeAnalysisOutput, ImprovedResumeOutput
+from app.services import ResumeAnalysisService, ResumeService, ResumeAnalysisOutput, SimpleImprovedResumeOutput
 from app.api.dependencies.auth import get_current_active_user
-from app.services.utils.file_service import FileService
-
-# Define a response model for analyze_resume
-class ResumeAnalysisResponse(BaseModel):
-    analysis_id: str
-    analysis_result: ResumeAnalysisOutput
 
 # Define a model for analysis metadata
 class AnalysisMetadata(BaseModel):
@@ -23,9 +17,8 @@ class AnalysisMetadata(BaseModel):
 router = APIRouter(prefix="/resume", tags=["resume-analysis"])
 resume_analysis_service = ResumeAnalysisService()
 resume_service = ResumeService()
-file_service = FileService()
 
-@router.post("/analyze", response_model=ResumeAnalysisResponse)
+@router.post("/analyze", response_model=ResumeAnalysisOutput)
 async def analyze_resume(
     resume_id: str = Form(...),
     job_title: str = Form("General Position"),
@@ -57,7 +50,6 @@ async def analyze_resume(
     
     # Perform the analysis
     try:
-        # We'll let the service handle the saving
         analysis_result = await resume_analysis_service.analyze_resume(
             resume_text=resume_text,
             job_title=job_title,
@@ -66,24 +58,22 @@ async def analyze_resume(
             resume_id=resume_id
         )
         
-        # Save the analysis (the service's analyze_resume doesn't return the ID)
-        analysis_id = await resume_analysis_service.save_analysis(
+        # Save the analysis
+        await resume_analysis_service.save_analysis(
             user_id=str(current_user.id),
             resume_id=resume_id,
             analysis_result=analysis_result
         )
         
-        return ResumeAnalysisResponse(
-            analysis_id=analysis_id,
-            analysis_result=analysis_result
-        )
+        # Return the analysis result directly
+        return analysis_result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Analysis failed: {str(e)}"
         )
 
-@router.post("/optimize", response_model=ImprovedResumeOutput)
+@router.post("/optimize", response_model=SimpleImprovedResumeOutput)
 async def optimize_resume(
     resume_id: str = Form(...),
     analysis_id: Optional[str] = Form(None),
@@ -120,11 +110,9 @@ async def optimize_resume(
     if analysis_id:
         try:
             # Fetch the analysis from the database
-            # This assumes you have a method to retrieve analysis by ID
-            # If not, you'll need to implement this in a service
             analysis_result = await resume_analysis_service.get_analysis_by_id(analysis_id)
             
-            # Verify the analysis belongs to the user/resume
+            # Verify the analysis was found
             if not analysis_result:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
