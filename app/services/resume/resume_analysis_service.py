@@ -170,17 +170,24 @@ class ResumeAnalysisService(BaseAIService):
         Returns:
             SimpleImprovedResumeOutput containing the optimized resume text
         """
-        # Simple system prompt focused on text enhancement
+        # Enhanced system prompt focused on professional resume formatting
         system_prompt = """
         You are a professional resume writer with 20+ years of experience. Your job is to enhance resumes to make them more effective for job applications.
         
         Focus on:
-        - Clear, professional formatting using markdown
-        - Strong action verbs and quantified achievements
-        - ATS-friendly structure and keywords
-        - Compelling content that highlights value
+        - Clean, professional markdown formatting following exact structure requirements
+        - Strong action verbs and quantified achievements with specific metrics
+        - ATS-friendly structure and strategic keyword placement
+        - Compelling content that highlights unique value proposition
+        - Professional formatting that looks amazing when rendered
         
-        Return only the enhanced resume text in markdown format along with a brief summary of changes.
+        CRITICAL FORMATTING REQUIREMENTS:
+        1. Use exactly this structure for maximum visual impact
+        2. Contact information must be formatted as: email | phone | linkedin.com/in/username | github.com/username
+        3. Use ## for main sections (Experience, Education, Skills, etc.)
+        4. Use ### for company names, job titles, and project names
+        5. Use bullet points (-) for achievements and responsibilities
+        6. Quantify achievements wherever possible with specific numbers, percentages, and metrics
         """
         
         # Extract key improvements from analysis
@@ -188,7 +195,7 @@ class ResumeAnalysisService(BaseAIService):
         critical_improvements = analysis_result.critical_improvements[:5]  # Top 5
         quick_wins = analysis_result.quick_wins[:5]  # Top 5
         
-        # Simple user prompt
+        # Enhanced user prompt with specific formatting requirements
         user_prompt = f"""
         Please enhance this resume for a {job_title} position in the {industry} industry.
         
@@ -200,15 +207,47 @@ class ResumeAnalysisService(BaseAIService):
         - Address these issues: {'; '.join(critical_improvements)}
         - Implement these quick wins: {'; '.join(quick_wins)}
         
-        REQUIREMENTS:
-        1. Use clean markdown formatting (# for name, ## for sections, ### for companies)
-        2. Transform bullet points to be achievement-focused with action verbs
-        3. Include relevant keywords naturally throughout
-        4. Maintain professional tone and accuracy
-        5. Keep the same basic structure but enhance content
+        EXACT FORMATTING REQUIREMENTS:
+        1. Start with: # [Full Name]
+        2. Next line: Contact information in format: email | phone | linkedin.com/in/username | github.com/username
+        3. Use ## for main sections: Experience, Education, Skills, Projects, Achievements
+        4. For Experience/Education, use ### for company/institution names
+        5. Include job titles, dates, and locations on separate lines after company names
+        6. Use - for bullet points describing achievements (start with action verbs)
+        7. Quantify everything possible (percentages, dollar amounts, time saved, users impacted, etc.)
+        8. Group skills logically (Programming Languages, Frameworks, Tools, etc.)
+        
+        CONTENT ENHANCEMENT:
+        - Transform all bullet points to start with strong action verbs (Engineered, Developed, Implemented, Led, Optimized, etc.)
+        - Add specific metrics and quantified results wherever possible
+        - Include relevant keywords naturally throughout
+        - Highlight achievements and impact, not just responsibilities
+        - Make the content compelling and results-focused
+        
+        EXAMPLE FORMAT:
+        # John Doe
+        john.doe@email.com | +1-555-123-4567 | linkedin.com/in/johndoe | github.com/johndoe
+        
+        ## Professional Experience
+        ### Software Engineer, Tech Company
+        Senior Software Engineer | January 2022 - Present | San Francisco, CA
+        - Engineered scalable microservices architecture serving 1M+ daily users, improving system performance by 40%
+        - Led cross-functional team of 5 developers to deliver features 25% faster than previous quarters
+        
+        ## Education
+        ### University of Technology
+        Bachelor of Science in Computer Science | 2018-2022 | GPA: 3.8/4.0
+        - Relevant Coursework: Data Structures, Algorithms, Software Engineering, Database Systems
+        
+        ## Skills
+        ### Programming Languages
+        Python, JavaScript, Java, C++, Go
+        
+        ### Frameworks & Technologies
+        React, Node.js, Django, AWS, Docker, Kubernetes
         
         Provide:
-        - markdown: The enhanced resume in markdown format
+        - markdown: The enhanced resume following the exact format above
         - changes_summary: List of 3-5 key improvements made
         - improvement_score: Estimated score improvement (0-100)
         """
