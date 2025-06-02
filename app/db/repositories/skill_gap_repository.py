@@ -113,6 +113,30 @@ class SkillGapRepository:
         """
         Map a database document to a SkillGapAnalysis model
         """
+        # Handle legacy matched_skills that might be missing required fields
+        matched_skills = analysis_db.get("matched_skills", [])
+        for skill in matched_skills:
+            if "evidence" not in skill:
+                skill["evidence"] = "Evidence not available"
+            if "meets_requirement" not in skill:
+                skill["meets_requirement"] = True
+        
+        # Handle legacy missing_skills that might be missing required fields
+        missing_skills = analysis_db.get("missing_skills", [])
+        for skill in missing_skills:
+            if "why_needed" not in skill:
+                skill["why_needed"] = "Required for role"
+            if "learning_path" not in skill:
+                skill["learning_path"] = "Recommended to learn through courses or practice"
+        
+        # Handle legacy project_recommendations that might be missing required fields
+        project_recommendations = analysis_db.get("project_recommendations", [])
+        for project in project_recommendations:
+            if "skills_gained" not in project:
+                project["skills_gained"] = "Various technical skills"
+            if "time_estimate" not in project:
+                project["time_estimate"] = "1-3 months"
+        
         return SkillGapAnalysis(
             id=str(analysis_db.get("_id")),
             userId=str(analysis_db.get("userId")),
@@ -120,13 +144,13 @@ class SkillGapRepository:
             job_description=analysis_db.get("job_description"),
             resume_text=analysis_db.get("resume_text"),
             match_percentage=analysis_db.get("match_percentage"),
-            matched_skills=analysis_db.get("matched_skills"),
-            missing_skills=analysis_db.get("missing_skills"),
-            project_recommendations=analysis_db.get("project_recommendations"),
-            top_strengths=analysis_db.get("top_strengths"),
-            biggest_gaps=analysis_db.get("biggest_gaps"),
-            next_steps=analysis_db.get("next_steps"),
-            timeline_to_ready=analysis_db.get("timeline_to_ready"),
+            matched_skills=matched_skills,
+            missing_skills=missing_skills,
+            project_recommendations=project_recommendations,
+            top_strengths=analysis_db.get("top_strengths") or "Not available",
+            biggest_gaps=analysis_db.get("biggest_gaps") or "Not available",
+            next_steps=analysis_db.get("next_steps") or "Not available",
+            timeline_to_ready=analysis_db.get("timeline_to_ready") or "Not available",
             overall_assessment=analysis_db.get("overall_assessment"),
             createdAt=analysis_db.get("createdAt"),
             job_posting_url=analysis_db.get("job_posting_url")
