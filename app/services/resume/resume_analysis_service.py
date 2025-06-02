@@ -39,6 +39,87 @@ class ResumeAnalysisService(BaseAIService):
         """
         analysis_data = analysis_result.model_dump()
         return await self.repository.save_analysis(user_id, resume_id, analysis_data)
+
+    async def optimize_resume(
+        self, 
+        resume_text: str,
+        job_title: str,
+        industry: str,
+        analysis_result: ResumeAnalysisOutput
+    ) -> SimpleImprovedResumeOutput:
+        """
+        Generate an optimized version of the resume based on analysis results
+        
+        Args:
+            resume_text: The text content of the resume to optimize
+            job_title: The target job title
+            industry: The target industry
+            analysis_result: The comprehensive analysis result
+            
+        Returns:
+            SimpleImprovedResumeOutput containing the optimized resume text
+        """
+        # Simple system prompt focused on text enhancement
+        system_prompt = """
+        You are a professional resume writer with 20+ years of experience. Your job is to enhance resumes to make them more effective for job applications.
+        
+        Focus on:
+        - Clear, professional formatting using markdown
+        - Strong action verbs and quantified achievements
+        - ATS-friendly structure and keywords
+        - Compelling content that highlights value
+        
+        Return only the enhanced resume text in markdown format along with a brief summary of changes.
+        """
+        
+        # Extract key improvements from analysis
+        missing_keywords = analysis_result.ats_compatibility.missing_keywords[:10]  # Top 10
+        critical_improvements = analysis_result.critical_improvements[:5]  # Top 5
+        quick_wins = analysis_result.quick_wins[:5]  # Top 5
+        
+        # Simple user prompt
+        user_prompt = f"""
+        Please enhance this resume for a {job_title} position in the {industry} industry.
+        
+        ORIGINAL RESUME:
+        {resume_text}
+        
+        KEY IMPROVEMENTS NEEDED:
+        - Add these missing keywords naturally: {', '.join(missing_keywords)}
+        - Address these issues: {'; '.join(critical_improvements)}
+        - Implement these quick wins: {'; '.join(quick_wins)}
+        
+        REQUIREMENTS:
+        1. Use clean markdown formatting (# for name, ## for sections, ### for companies)
+        2. Transform bullet points to be achievement-focused with action verbs
+        3. Include relevant keywords naturally throughout
+        4. Maintain professional tone and accuracy
+        5. Keep the same basic structure but enhance content
+        
+        Provide:
+        - markdown: The enhanced resume in markdown format
+        - changes_summary: List of 3-5 key improvements made
+        - improvement_score: Estimated score improvement (0-100)
+        """
+        
+        # Make request to Groq for optimization
+        try:
+            print(f"Starting simplified resume optimization...")
+            
+            result = await self._make_groq_request(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                response_model=SimpleImprovedResumeOutput,
+                temperature=0.3,
+            )
+            
+            print(f"Resume optimization completed successfully")
+            return result
+        except Exception as e:
+            print(f"Resume optimization failed: {str(e)}")
+            import traceback
+            print(f"Full traceback: {traceback.format_exc()}")
+            raise Exception(f"Resume optimization failed: {str(e)}") 
     
     async def analyze_resume(
         self, 
